@@ -16,13 +16,13 @@ const api = {
 
 function ensureAuth() {
   if (!localStorage.getItem('token')) {
-    window.location.href = 'login.html';
+    window.location.href = './login.html';
   }
 }
 
 function logout() {
   localStorage.removeItem('token');
-  window.location.href = 'login.html';
+  window.location.href = './login.html';
 }
 
 window.hotelBooking = { api, ensureAuth, logout };
