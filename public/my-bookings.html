@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>My Bookings - Hotel Booking</title>
+  <link rel="stylesheet" href="/css/styles.css" />
+</head>
+<body>
+  <div class="topbar">
+    <div class="inner">
+      <strong>Hotel Booking</strong>
+      <div class="nav">
+        <a href="/hotels.html">Hotels</a>
+        <a href="/my-bookings.html">My Bookings</a>
+        <a href="#" onclick="hotelBooking.logout()">Logout</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="container">
+    <div class="card">
+      <h1>My Bookings</h1>
+      <p class="muted">Your confirmed reservations are listed below.</p>
+    </div>
+    <div id="list"></div>
+  </div>
+
+  <script src="/js/common.js"></script>
+  <script>
+    hotelBooking.ensureAuth();
+
+    async function loadBookings() {
+      const bookings = await hotelBooking.api.request('/api/bookings/my');
+      const list = document.getElementById('list');
+
+      if (!bookings.length) {
+        list.innerHTML = '<div class="card"><p>No bookings yet.</p></div>';
+        return;
+      }
+
+      list.innerHTML = bookings.map((booking) => `
+        <div class="card">
+          <h3>${booking.hotel_name} (${booking.hotel_location})</h3>
+          <p>Room Type: ${booking.room_type}</p>
+          <p>Price per night: INR ${booking.price_per_night}</p>
+          <p>Check-in: ${booking.check_in}</p>
+          <p>Check-out: ${booking.check_out}</p>
+          <p>Rooms booked: ${booking.rooms_booked}</p>
+        </div>
+      `).join('');
+    }
+
+    loadBookings().catch((error) => {
+      document.getElementById('list').innerHTML = `<div class=\"card\"><p class=\"error\">${error.message}</p></div>`;
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Booking Confirmation - Hotel Booking</title>
+  <link rel="stylesheet" href="/css/styles.css" />
+</head>
+<body>
+  <div class="topbar">
+    <div class="inner">
+      <strong>Hotel Booking</strong>
+      <div class="nav">
+        <a href="/hotels.html">Hotels</a>
+        <a href="/my-bookings.html">My Bookings</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="container">
+    <div class="card" id="content"></div>
+  </div>
+
+  <script src="/js/common.js"></script>
+  <script>
+    hotelBooking.ensureAuth();
+    const booking = JSON.parse(sessionStorage.getItem('latestBooking') || 'null');
+    const content = document.getElementById('content');
+
+    if (!booking) {
+      content.innerHTML = '<h1>No recent booking found</h1><p><a href="/hotels.html">Search hotels</a></p>';
+    } else {
+      content.innerHTML = `
+        <h1>Booking Confirmed</h1>
+        <p>Booking ID: <strong>${booking.id}</strong></p>
+        <p>Room ID: ${booking.roomId}</p>
+        <p>Check-in: ${booking.checkIn}</p>
+        <p>Check-out: ${booking.checkOut}</p>
+        <p>Rooms booked: ${booking.roomsBooked}</p>
+        <p><a href="/my-bookings.html">View all bookings</a></p>
+      `;
+    }
+  </script>
+</body>
+</html>

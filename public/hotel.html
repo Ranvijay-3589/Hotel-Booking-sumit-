@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Hotel Detail - Hotel Booking</title>
+  <link rel="stylesheet" href="/css/styles.css" />
+</head>
+<body>
+  <div class="topbar">
+    <div class="inner">
+      <strong>Hotel Booking</strong>
+      <div class="nav">
+        <a href="/hotels.html">Hotels</a>
+        <a href="/my-bookings.html">My Bookings</a>
+        <a href="#" onclick="hotelBooking.logout()">Logout</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="container">
+    <div id="hotelDetail" class="card"></div>
+    <div id="roomList"></div>
+  </div>
+
+  <script src="/js/common.js"></script>
+  <script>
+    hotelBooking.ensureAuth();
+
+    const query = new URLSearchParams(window.location.search);
+    const hotelId = query.get('id');
+
+    async function bookRoom(roomId) {
+      const checkIn = document.getElementById(`checkin-${roomId}`).value;
+      const checkOut = document.getElementById(`checkout-${roomId}`).value;
+      const roomsBooked = document.getElementById(`rooms-${roomId}`).value || 1;
+      const statusEl = document.getElementById(`status-${roomId}`);
+      statusEl.textContent = '';
+
+      try {
+        const booking = await hotelBooking.api.request('/api/bookings', {
+          method: 'POST',
+          body: JSON.stringify({ roomId, checkIn, checkOut, roomsBooked: Number(roomsBooked) })
+        });
+        sessionStorage.setItem('latestBooking', JSON.stringify(booking));
+        window.location.href = '/booking-confirmation.html';
+      } catch (error) {
+        statusEl.textContent = error.message;
+      }
+    }
+
+    async function loadHotel() {
+      if (!hotelId) {
+        document.getElementById('hotelDetail').innerHTML = '<p class="error">Missing hotel ID</p>';
+        return;
+      }
+
+      const hotel = await hotelBooking.api.request(`/api/hotels/${hotelId}`);
+      document.getElementById('hotelDetail').innerHTML = `
+        <h1>${hotel.name}</h1>
+        <p>${hotel.location}</p>
+        <p class="muted">${hotel.description || ''}</p>
+      `;
+
+      const roomsHtml = hotel.rooms.map((room) => `
+        <div class="card">
+          <h3>${room.room_type}</h3>
+          <p>Price: INR ${room.price_per_night} / night</p>
+          <p>Currently available: ${room.currently_available}</p>
+          <div class="row">
+            <div>
+              <label>Check-in</label>
+              <input id="checkin-${room.id}" type="date" required />
+            </div>
+            <div>
+              <label>Check-out</label>
+              <input id="checkout-${room.id}" type="date" required />
+            </div>
+            <div>
+              <label>Rooms</label>
+              <input id="rooms-${room.id}" type="number" min="1" value="1" />
+            </div>
+          </div>
+          <button onclick="bookRoom(${room.id})">Book Room</button>
+          <p id="status-${room.id}" class="error"></p>
+        </div>
+      `).join('');
+
+      document.getElementById('roomList').innerHTML = roomsHtml;
+    }
+
+    loadHotel().catch((error) => {
+      document.getElementById('hotelDetail').innerHTML = `<p class=\"error\">${error.message}</p>`;
+    });
+  </script>
+</body>
+</html>

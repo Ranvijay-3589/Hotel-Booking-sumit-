@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Hotel Search - Hotel Booking</title>
+  <link rel="stylesheet" href="/css/styles.css" />
+</head>
+<body>
+  <div class="topbar">
+    <div class="inner">
+      <strong>Hotel Booking</strong>
+      <div class="nav">
+        <a href="/hotels.html">Hotels</a>
+        <a href="/my-bookings.html">My Bookings</a>
+        <a href="#" onclick="hotelBooking.logout()">Logout</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="container">
+    <div class="card">
+      <h1>Search Hotels</h1>
+      <div class="row">
+        <div>
+          <label>Location</label>
+          <input id="location" placeholder="e.g. Goa" />
+        </div>
+        <div>
+          <label>Min Price</label>
+          <input id="minPrice" type="number" min="0" />
+        </div>
+        <div>
+          <label>Max Price</label>
+          <input id="maxPrice" type="number" min="0" />
+        </div>
+      </div>
+      <button id="searchBtn">Search</button>
+    </div>
+    <div id="results"></div>
+  </div>
+
+  <script src="/js/common.js"></script>
+  <script>
+    hotelBooking.ensureAuth();
+
+    async function loadHotels() {
+      const params = new URLSearchParams();
+      const location = document.getElementById('location').value;
+      const minPrice = document.getElementById('minPrice').value;
+      const maxPrice = document.getElementById('maxPrice').value;
+
+      if (location) params.set('location', location);
+      if (minPrice) params.set('minPrice', minPrice);
+      if (maxPrice) params.set('maxPrice', maxPrice);
+
+      const hotels = await hotelBooking.api.request(`/api/hotels?${params.toString()}`);
+      const results = document.getElementById('results');
+      if (!hotels.length) {
+        results.innerHTML = '<div class="card"><p>No hotels found.</p></div>';
+        return;
+      }
+
+      results.innerHTML = hotels.map((hotel) => `
+        <div class="card">
+          <h3>${hotel.name}</h3>
+          <p>${hotel.location}</p>
+          <p class="muted">${hotel.description || ''}</p>
+          <p>Price range: INR ${hotel.min_price} - INR ${hotel.max_price}</p>
+          <button onclick="window.location.href='/hotel.html?id=${hotel.id}'">View Details</button>
+        </div>
+      `).join('');
+    }
+
+    document.getElementById('searchBtn').addEventListener('click', loadHotels);
+    loadHotels().catch((error) => {
+      document.getElementById('results').innerHTML = `<div class=\"card\"><p class=\"error\">${error.message}</p></div>`;
+    });
+  </script>
+</body>
+</html>
