@@ -14,6 +14,14 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+// Strip subpath prefix if present (handles proxy path rewriting)
+app.use((req, res, next) => {
+  if (req.path.startsWith('/sumit/')) {
+    req.url = req.url.replace('/sumit', '');
+  }
+  next();
+});
+
 // Serve static files from public directory
 app.use(express.static(path.join(__dirname, '../public')));
 

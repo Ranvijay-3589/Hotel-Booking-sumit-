@@ -270,9 +270,12 @@
       submitBtn.textContent = 'Adding...';
 
       try {
+        const payload = { name, location, description, rating, amenities, image_url, rooms };
+        console.log('Submitting hotel:', JSON.stringify(payload));
+
         await hotelBooking.api.request('/api/hotels', {
           method: 'POST',
-          body: JSON.stringify({ name, location, description, rating, amenities, image_url, rooms })
+          body: JSON.stringify(payload)
         });
 
         alert.className = 'alert alert-success mt-3';
@@ -294,7 +297,12 @@
         }, 1000);
       } catch (error) {
         alert.className = 'alert alert-danger mt-3';
-        alert.textContent = error.message || 'Failed to add hotel.';
+        if (error.status === 401) {
+          alert.textContent = 'You must be logged in to add a hotel. Please login first.';
+        } else {
+          alert.textContent = error.message || 'Failed to add hotel.';
+        }
+        console.error('Add hotel error:', error);
       } finally {
         submitBtn.disabled = false;
         submitBtn.textContent = 'Add Hotel';

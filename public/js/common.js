@@ -19,7 +19,18 @@ const api = {
     const data = await response.json().catch(() => ({}));
 
     if (!response.ok) {
-      throw new Error(data.message || 'Request failed');
+      // Build a detailed error message including validation errors
+      let msg = data.message || 'Request failed';
+      if (data.errors && Array.isArray(data.errors)) {
+        msg += ': ' + data.errors.map(e => `${e.field} - ${e.message}`).join(', ');
+      }
+      if (response.status === 401) {
+        msg = 'Session expired. Please login again.';
+      }
+      const err = new Error(msg);
+      err.status = response.status;
+      err.data = data;
+      throw err;
     }
     return data;
   }
