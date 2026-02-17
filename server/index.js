@@ -14,10 +14,21 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+// Handle JSON parse errors gracefully
+app.use((err, req, res, next) => {
+  if (err.type === 'entity.parse.failed') {
+    return res.status(400).json({ message: 'Invalid JSON in request body' });
+  }
+  next(err);
+});
+
 // Strip subpath prefix if present (handles proxy path rewriting)
+// The reverse proxy at ranvijay.capricorn.online may forward requests
+// with /sumit/ prefix intact. This middleware strips it so routes match.
 app.use((req, res, next) => {
-  if (req.path.startsWith('/sumit/')) {
-    req.url = req.url.replace('/sumit', '');
+  if (req.url.startsWith('/sumit/') || req.url === '/sumit') {
+    req.url = req.url.replace(/^\/sumit/, '') || '/';
+    console.log('[Proxy] Stripped /sumit prefix, new URL:', req.url);
   }
   next();
 });

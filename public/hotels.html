@@ -271,15 +271,16 @@
 
       try {
         const payload = { name, location, description, rating, amenities, image_url, rooms };
-        console.log('Submitting hotel:', JSON.stringify(payload));
+        console.log('[AddHotel] Submitting payload:', JSON.stringify(payload, null, 2));
 
-        await hotelBooking.api.request('/api/hotels', {
+        const result = await hotelBooking.api.request('/api/hotels', {
           method: 'POST',
           body: JSON.stringify(payload)
         });
 
+        console.log('[AddHotel] Success:', result);
         alert.className = 'alert alert-success mt-3';
-        alert.textContent = 'Hotel added successfully!';
+        alert.textContent = 'Hotel added successfully! "' + (result.hotel ? result.hotel.name : name) + '"';
 
         // Reset form after short delay
         setTimeout(() => {
@@ -292,17 +293,23 @@
           alert.className = 'alert d-none mt-3';
 
           // Close modal and reload list
-          bootstrap.Modal.getInstance(document.getElementById('addHotelModal')).hide();
+          const modal = bootstrap.Modal.getInstance(document.getElementById('addHotelModal'));
+          if (modal) modal.hide();
           loadHotels();
-        }, 1000);
+        }, 1500);
       } catch (error) {
+        console.error('[AddHotel] Error:', error);
+        console.error('[AddHotel] Error status:', error.status);
+        console.error('[AddHotel] Error data:', error.data);
+
         alert.className = 'alert alert-danger mt-3';
         if (error.status === 401) {
           alert.textContent = 'You must be logged in to add a hotel. Please login first.';
+        } else if (error.status === 400) {
+          alert.textContent = 'Validation error: ' + error.message;
         } else {
-          alert.textContent = error.message || 'Failed to add hotel.';
+          alert.textContent = error.message || 'Failed to add hotel. Please try again.';
         }
-        console.error('Add hotel error:', error);
       } finally {
         submitBtn.disabled = false;
         submitBtn.textContent = 'Add Hotel';
