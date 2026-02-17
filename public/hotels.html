@@ -63,10 +63,11 @@
       const maxPrice = document.getElementById('maxPrice').value;
 
       if (location) params.set('location', location);
-      if (minPrice) params.set('minPrice', minPrice);
-      if (maxPrice) params.set('maxPrice', maxPrice);
+      if (minPrice) params.set('min_price', minPrice);
+      if (maxPrice) params.set('max_price', maxPrice);
 
-      const hotels = await hotelBooking.api.request(`/api/hotels?${params.toString()}`);
+      const data = await hotelBooking.api.request(`/api/hotels?${params.toString()}`);
+      const hotels = data.hotels || [];
       const results = document.getElementById('results');
 
       if (!hotels.length) {
@@ -74,21 +75,28 @@
         return;
       }
 
-      results.innerHTML = hotels.map((hotel) => `
+      results.innerHTML = hotels.map((hotel) => {
+        const rooms = hotel.rooms || [];
+        const prices = rooms.map(r => parseFloat(r.price_per_night)).filter(p => !isNaN(p));
+        const minPrice = prices.length > 0 ? Math.min(...prices) : 0;
+        const maxPrice = prices.length > 0 ? Math.max(...prices) : 0;
+
+        return `
         <div class="col-12 col-lg-6">
           <article class="card border-0 shadow-sm h-100">
             <div class="card-body d-flex flex-column">
               <h2 class="h5 mb-2">${hotel.name}</h2>
               <p class="text-secondary mb-1">${hotel.location}</p>
               <p class="text-secondary small mb-3">${hotel.description || ''}</p>
-              <p class="mb-4">Price range: INR ${hotel.min_price} - INR ${hotel.max_price}</p>
+              <p class="mb-1"><span class="badge bg-warning text-dark">Rating: ${hotel.rating || 'N/A'}</span></p>
+              <p class="mb-4">Price range: INR ${minPrice} - INR ${maxPrice}</p>
               <div class="mt-auto d-grid">
                 <button class="btn btn-outline-primary" onclick="window.location.href='./hotel.html?id=${hotel.id}'">View Details</button>
               </div>
             </div>
           </article>
-        </div>
-      `).join('');
+        </div>`;
+      }).join('');
     }
 
     document.getElementById('searchBtn').addEventListener('click', loadHotels);
