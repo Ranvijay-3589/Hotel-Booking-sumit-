@@ -1,55 +1,44 @@
 // Determine the API base URL
-// On deployed site (ranvijay.capricorn.online/sumit/), the reverse proxy
-// forwards /sumit/api/* requests to the backend. We need to keep the /sumit prefix.
-// On localhost, there is no prefix.
+// Deployed at: https://ranvijay.capricorn.online/sumit/
+// Local dev:   http://localhost:5000/
+// The reverse proxy keeps the /sumit prefix, so API calls must include it.
 const API_BASE = (() => {
   const origin = window.location.origin;
-  const p = window.location.pathname;
-  // Extract subpath: e.g. /sumit/hotels.html -> /sumit
-  const parts = p.split('/').filter(Boolean);
-  // If we're under a subpath (more than just the filename), use it
-  if (parts.length > 1) {
-    return origin + '/' + parts[0];
+  const path = window.location.pathname;
+
+  // Check if we're under a subpath like /sumit/hotels.html
+  // Extract the first path segment as the subpath prefix
+  const match = path.match(/^\/([^/]+)\//);
+  if (match) {
+    // We're under a subpath (e.g., /sumit/)
+    return origin + '/' + match[1];
   }
+
+  // localhost or root deployment — no prefix
   return origin;
 })();
 
 const api = {
-  async request(path, options = {}) {
+  async request(endpoint, options = {}) {
     const token = localStorage.getItem('token');
     const headers = { 'Content-Type': 'application/json', ...(options.headers || {}) };
     if (token) headers.Authorization = `Bearer ${token}`;
 
-    const url = API_BASE + path;
-    console.log('[API]', options.method || 'GET', url);
+    const url = API_BASE + endpoint;
 
-    let response;
-    try {
-      response = await fetch(url, { ...options, headers });
-    } catch (networkError) {
-      // Network error - try without subpath as fallback
-      console.warn('[API] Network error, trying without subpath:', networkError.message);
-      try {
-        response = await fetch(window.location.origin + path, { ...options, headers });
-      } catch (fallbackError) {
-        throw new Error('Network error: Unable to reach the server. Please check your connection.');
-      }
-    }
+    const response = await fetch(url, { ...options, headers });
 
-    let data;
+    // Check if we got JSON back
     const contentType = response.headers.get('content-type');
+    let data;
     if (contentType && contentType.includes('application/json')) {
       data = await response.json().catch(() => ({}));
     } else {
-      // Non-JSON response (likely HTML error page like "Cannot POST /api/hotels")
       const text = await response.text().catch(() => '');
-      console.error('[API] Non-JSON response:', text.substring(0, 200));
-
       if (text.includes('Cannot POST') || text.includes('Cannot GET') || text.includes('Cannot PUT') || text.includes('Cannot DELETE')) {
-        throw new Error('API endpoint not found. The server may need to be restarted with the latest code.');
+        throw new Error('API endpoint not found. The server may need to be updated.');
       }
-
-      data = { message: 'Unexpected server response' };
+      data = { message: text || 'Unexpected server response' };
     }
 
     if (!response.ok) {
