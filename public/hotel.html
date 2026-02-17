@@ -62,7 +62,9 @@
         return;
       }
 
-      const hotel = await hotelBooking.api.request(`/api/hotels/${hotelId}`);
+      const data = await hotelBooking.api.request(`/api/hotels/${hotelId}`);
+      const hotel = data.hotel;
+
       document.getElementById('hotelDetail').innerHTML = `
         <div class="card-body p-4">
           <h1 class="h3 mb-2">${hotel.name}</h1>
@@ -71,13 +73,19 @@
         </div>
       `;
 
-      const roomsHtml = hotel.rooms.map((room) => `
+      const rooms = hotel.rooms || [];
+      const roomsHtml = rooms.map((room) => {
+        const activeBookings = (room.bookings || []).length;
+        const availableStatus = room.available ? 'Yes' : 'No';
+
+        return `
         <div class="col-12">
           <article class="card border-0 shadow-sm">
             <div class="card-body p-4">
               <h2 class="h5 mb-3">${room.room_type}</h2>
-              <p class="mb-1">Price: INR ${room.price_per_night} / night</p>
-              <p class="text-secondary mb-3">Currently available: ${room.currently_available}</p>
+              <p class="mb-1">Price: INR ${parseFloat(room.price_per_night).toLocaleString()} / night</p>
+              <p class="text-secondary mb-1">Capacity: ${room.capacity} guest(s)</p>
+              <p class="text-secondary mb-3">Available: <span class="badge ${room.available ? 'bg-success' : 'bg-danger'}">${availableStatus}</span></p>
               <div class="row g-3">
                 <div class="col-12 col-md-4">
                   <label for="checkin-${room.id}" class="form-label">Check-in</label>
@@ -93,15 +101,15 @@
                 </div>
               </div>
               <div class="d-grid d-md-inline-block mt-3">
-                <button class="btn btn-primary" onclick="bookRoom(${room.id})">Book Room</button>
+                <button class="btn btn-primary" onclick="bookRoom(${room.id})" ${!room.available ? 'disabled' : ''}>Book Room</button>
               </div>
               <p id="status-${room.id}" class="text-danger small mt-2 mb-0"></p>
             </div>
           </article>
-        </div>
-      `).join('');
+        </div>`;
+      }).join('');
 
-      document.getElementById('roomList').innerHTML = roomsHtml;
+      document.getElementById('roomList').innerHTML = roomsHtml || '<div class="col-12"><p class="text-secondary">No rooms available for this hotel.</p></div>';
     }
 
     loadHotel().catch((error) => {
