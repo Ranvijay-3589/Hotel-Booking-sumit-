@@ -44,8 +44,10 @@
     }
 
     async function bookRoom(roomId) {
-      const checkIn = document.getElementById(`checkin-${roomId}`).value;
-      const checkOut = document.getElementById(`checkout-${roomId}`).value;
+      const checkInEl = document.getElementById(`checkin-${roomId}`);
+      const checkOutEl = document.getElementById(`checkout-${roomId}`);
+      const checkIn = checkInEl ? checkInEl.value : '';
+      const checkOut = checkOutEl ? checkOutEl.value : '';
       const roomsBooked = document.getElementById(`rooms-${roomId}`).value || 1;
       const statusEl = document.getElementById(`status-${roomId}`);
       statusEl.textContent = '';
@@ -60,15 +62,19 @@
         return;
       }
 
+      const bookingData = {
+        room_id: Number(roomId),
+        check_in: checkIn,
+        check_out: checkOut,
+        guests: Number(roomsBooked)
+      };
+
       try {
-        const booking = await hotelBooking.api.request('/api/bookings', {
+        // Send data both as body and query params to handle proxy issues
+        const queryStr = `?room_id=${encodeURIComponent(roomId)}&check_in=${encodeURIComponent(checkIn)}&check_out=${encodeURIComponent(checkOut)}&guests=${encodeURIComponent(roomsBooked)}`;
+        const booking = await hotelBooking.api.request('/api/bookings' + queryStr, {
           method: 'POST',
-          body: JSON.stringify({
-            room_id: roomId,
-            check_in: checkIn,
-            check_out: checkOut,
-            guests: Number(roomsBooked)
-          })
+          body: JSON.stringify(bookingData)
         });
         sessionStorage.setItem('latestBooking', JSON.stringify(booking));
         window.location.href = './booking-confirmation.html';

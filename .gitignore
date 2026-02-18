@@ -4,3 +4,5 @@ client/build/
 coverage/
 .env
 *.log
+
+.chat_images/
