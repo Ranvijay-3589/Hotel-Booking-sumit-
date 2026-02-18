@@ -39,6 +39,8 @@ export const getMe = () => api.get('/auth/me');
 // Hotels
 export const getHotels = (params) => api.get('/hotels', { params });
 export const getHotel = (id) => api.get(`/hotels/${id}`);
+export const updateHotel = (id, data) => api.put(`/hotels/${id}`, data);
+export const deleteHotel = (id) => api.delete(`/hotels/${id}`);
 
 // Bookings
 export const createBooking = (data) => api.post('/bookings', data);

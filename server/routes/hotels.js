@@ -144,4 +144,91 @@ router.post('/',
   }
 );
 
+// PUT /api/hotels/:id - Update a hotel (authenticated users)
+router.put('/:id',
+  auth,
+  [
+    body('name').optional().trim().notEmpty().withMessage('Hotel name cannot be empty'),
+    body('location').optional().trim().notEmpty().withMessage('Location cannot be empty'),
+    body('description').optional().trim(),
+    body('rating').optional().isFloat({ min: 0, max: 5 }).withMessage('Rating must be between 0 and 5'),
+    body('amenities').optional().isArray().withMessage('Amenities must be an array'),
+    body('image_url').optional().trim(),
+    body('rooms').optional().isArray().withMessage('Rooms must be an array'),
+    body('rooms.*.room_type').optional().trim().notEmpty().withMessage('Room type is required'),
+    body('rooms.*.price_per_night').optional().isFloat({ min: 0 }).withMessage('Price must be positive'),
+    body('rooms.*.capacity').optional().isInt({ min: 1 }).withMessage('Capacity must be at least 1'),
+  ],
+  validate,
+  async (req, res) => {
+    try {
+      const hotel = await Hotel.findByPk(req.params.id);
+      if (!hotel) {
+        return res.status(404).json({ message: 'Hotel not found' });
+      }
+
+      const { name, location, description, rating, amenities, image_url, rooms } = req.body;
+
+      // Update hotel fields
+      await hotel.update({
+        ...(name !== undefined && { name }),
+        ...(location !== undefined && { location }),
+        ...(description !== undefined && { description }),
+        ...(rating !== undefined && { rating }),
+        ...(amenities !== undefined && { amenities }),
+        ...(image_url !== undefined && { image_url })
+      });
+
+      // Update rooms if provided
+      if (rooms && Array.isArray(rooms)) {
+        // Delete existing rooms and recreate
+        await Room.destroy({ where: { hotel_id: hotel.id } });
+        if (rooms.length > 0) {
+          const roomRecords = rooms.map(room => ({
+            hotel_id: hotel.id,
+            room_type: room.room_type,
+            price_per_night: room.price_per_night,
+            capacity: room.capacity || 2,
+            available: room.available !== undefined ? room.available : true,
+            description: room.description || ''
+          }));
+          await Room.bulkCreate(roomRecords);
+        }
+      }
+
+      // Fetch updated hotel with rooms
+      const updatedHotel = await Hotel.findByPk(hotel.id, {
+        include: [{ model: Room, as: 'rooms' }]
+      });
+
+      res.json({ message: 'Hotel updated successfully', hotel: updatedHotel });
+    } catch (error) {
+      res.status(500).json({ message: 'Server error', error: error.message });
+    }
+  }
+);
+
+// DELETE /api/hotels/:id - Delete a hotel (authenticated users)
+router.delete('/:id', auth, async (req, res) => {
+  try {
+    const hotel = await Hotel.findByPk(req.params.id, {
+      include: [{ model: Room, as: 'rooms' }]
+    });
+
+    if (!hotel) {
+      return res.status(404).json({ message: 'Hotel not found' });
+    }
+
+    // Delete associated rooms first
+    await Room.destroy({ where: { hotel_id: hotel.id } });
+
+    // Delete the hotel
+    await hotel.destroy();
+
+    res.json({ message: 'Hotel deleted successfully' });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
 module.exports = router;
