@@ -62,7 +62,7 @@
       const checkOutEl = document.getElementById(`checkout-${roomId}`);
       const checkIn = checkInEl ? checkInEl.value : '';
       const checkOut = checkOutEl ? checkOutEl.value : '';
-      const roomsBooked = document.getElementById(`rooms-${roomId}`).value || 1;
+      const roomsBooked = Number(document.getElementById(`rooms-${roomId}`).value) || 1;
       const statusEl = document.getElementById(`status-${roomId}`);
       statusEl.textContent = '';
 
@@ -80,18 +80,18 @@
       const room = loadedRooms.find(r => String(r.id) === String(roomId));
       const pricePerNight = room ? parseFloat(room.price_per_night || room.price) : 0;
       const nights = Math.ceil((new Date(checkOut) - new Date(checkIn)) / (1000 * 60 * 60 * 24));
-      const calculatedTotal = nights * pricePerNight;
+      const calculatedTotal = nights * pricePerNight * roomsBooked;
 
       const bookingData = {
         room_id: Number(roomId),
         check_in: checkIn,
         check_out: checkOut,
-        guests: Number(roomsBooked)
+        rooms_booked: roomsBooked
       };
 
       try {
         // Send data both as body and query params to handle proxy issues
-        const queryStr = `?room_id=${encodeURIComponent(roomId)}&check_in=${encodeURIComponent(checkIn)}&check_out=${encodeURIComponent(checkOut)}&guests=${encodeURIComponent(roomsBooked)}`;
+        const queryStr = `?room_id=${encodeURIComponent(roomId)}&check_in=${encodeURIComponent(checkIn)}&check_out=${encodeURIComponent(checkOut)}&rooms_booked=${encodeURIComponent(roomsBooked)}`;
         const booking = await hotelBooking.api.request('/api/bookings' + queryStr, {
           method: 'POST',
           body: JSON.stringify(bookingData)
@@ -106,7 +106,7 @@
           room_type: booking.room_type || (room ? room.room_type : ''),
           check_in: booking.check_in || checkIn,
           check_out: booking.check_out || checkOut,
-          guests: booking.guests || Number(roomsBooked),
+          rooms_booked: booking.rooms_booked || roomsBooked,
           total_price: booking.total_price || calculatedTotal,
           status: booking.status || 'confirmed'
         };

@@ -119,7 +119,7 @@
       checkOutEl.min = today;
       checkInEl.value = formatDate(booking.check_in);
       checkOutEl.value = formatDate(booking.check_out);
-      document.getElementById('editGuests').value = booking.guests || booking.rooms_booked || 1;
+      document.getElementById('editGuests').value = booking.rooms_booked || 1;
 
       document.getElementById('editError').textContent = '';
       document.getElementById('editSuccess').textContent = '';
@@ -133,7 +133,7 @@
       const bookingId = document.getElementById('editBookingId').value;
       const checkIn = document.getElementById('editCheckIn').value;
       const checkOut = document.getElementById('editCheckOut').value;
-      const guests = document.getElementById('editGuests').value;
+      const rooms_booked = document.getElementById('editGuests').value;
       const errorEl = document.getElementById('editError');
       const successEl = document.getElementById('editSuccess');
       const saveBtn = document.getElementById('saveEditBtn');
@@ -155,10 +155,10 @@
       saveBtn.textContent = 'Saving...';
 
       try {
-        const queryStr = `?checkIn=${encodeURIComponent(checkIn)}&checkOut=${encodeURIComponent(checkOut)}&guests=${encodeURIComponent(guests)}`;
+        const queryStr = `?checkIn=${encodeURIComponent(checkIn)}&checkOut=${encodeURIComponent(checkOut)}&rooms_booked=${encodeURIComponent(rooms_booked)}`;
         await hotelBooking.api.request('/api/bookings/' + bookingId + queryStr, {
           method: 'PUT',
-          body: JSON.stringify({ checkIn, checkOut, guests: Number(guests) })
+          body: JSON.stringify({ checkIn, checkOut, rooms_booked: Number(rooms_booked) })
         });
 
         successEl.textContent = 'Booking updated successfully!';
@@ -244,7 +244,7 @@
           const pricePerNight = booking.price_per_night || booking.room_price || booking.Room?.price || '';
           const checkIn = formatDate(booking.check_in || booking.checkIn);
           const checkOut = formatDate(booking.check_out || booking.checkOut);
-          const roomsBooked = booking.guests || booking.rooms_booked || booking.roomsBooked || 1;
+          const roomsBooked = booking.rooms_booked || booking.roomsBooked || 1;
           const totalPrice = booking.total_price || booking.totalPrice || '';
           const status = booking.status || 'confirmed';
           const bookingId = booking.id;

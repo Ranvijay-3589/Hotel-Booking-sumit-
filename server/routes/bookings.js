@@ -20,7 +20,7 @@ router.post('/', auth, async (req, res) => {
     const room_id = data.roomId || data.room_id;
     const check_in = data.checkIn || data.check_in;
     const check_out = data.checkOut || data.check_out;
-    const guests = data.guests || data.roomsBooked || 1;
+    const rooms_booked = Number(data.rooms_booked || data.roomsBooked) || 1;
     const user_id = req.user.id;
 
     if (!room_id || !check_in || !check_out) {
@@ -54,29 +54,30 @@ router.post('/', auth, async (req, res) => {
     const room = roomResult.rows[0];
     const hotel_id = room.hotel_id;
 
-    // Check availability: count overlapping bookings
+    // Check availability: count overlapping room bookings
     const overlapResult = await pool.query(
-      `SELECT COUNT(*) as booked FROM bookings
+      `SELECT COALESCE(SUM(rooms_booked), 0) as booked FROM bookings
        WHERE room_id = $1 AND status = 'confirmed'
        AND check_in < $3 AND check_out > $2`,
       [room_id, check_in, check_out]
     );
 
     const booked = parseInt(overlapResult.rows[0].booked, 10);
-    if (booked >= room.total_rooms) {
-      return res.status(400).json({ message: 'No rooms available for the selected dates' });
+    if (booked + rooms_booked > room.total_rooms) {
+      const available = room.total_rooms - booked;
+      return res.status(400).json({ message: available > 0 ? `Only ${available} room(s) available for the selected dates` : 'No rooms available for the selected dates' });
     }
 
-    // Calculate total price
+    // Calculate total price (price per night × nights × rooms)
     const nights = Math.ceil((checkOutDate - checkInDate) / (1000 * 60 * 60 * 24));
-    const total_price = nights * parseFloat(room.price);
+    const total_price = nights * parseFloat(room.price) * rooms_booked;
 
     // Create booking
     const result = await pool.query(
-      `INSERT INTO bookings (user_id, room_id, hotel_id, check_in, check_out, guests, total_price)
-       VALUES ($1, $2, $3, $4, $5, $6, $7)
+      `INSERT INTO bookings (user_id, room_id, hotel_id, check_in, check_out, guests, rooms_booked, total_price)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
        RETURNING *`,
-      [user_id, room_id, hotel_id, check_in, check_out, guests, total_price]
+      [user_id, room_id, hotel_id, check_in, check_out, rooms_booked, rooms_booked, total_price]
     );
 
     // Return booking with hotel and room info for the confirmation page
@@ -93,7 +94,7 @@ router.post('/', auth, async (req, res) => {
       room_type: room.room_type,
       check_in: booking.check_in,
       check_out: booking.check_out,
-      guests: booking.guests,
+      rooms_booked: booking.rooms_booked,
       total_price: booking.total_price,
       status: booking.status,
       created_at: booking.created_at
@@ -108,7 +109,9 @@ router.post('/', auth, async (req, res) => {
 router.get('/my', auth, async (req, res) => {
   try {
     const result = await pool.query(
-      `SELECT b.*, h.name as hotel_name, h.location as hotel_location, h.image_url,
+      `SELECT b.id, b.user_id, b.room_id, b.hotel_id, b.check_in, b.check_out,
+              b.rooms_booked, b.total_price, b.status, b.created_at,
+              h.name as hotel_name, h.location as hotel_location, h.image_url,
               r.room_type, r.price as room_price
        FROM bookings b
        JOIN hotels h ON h.id = b.hotel_id
@@ -149,7 +152,7 @@ router.put('/:id', auth, async (req, res) => {
 
     const check_in = data.checkIn || data.check_in || booking.check_in;
     const check_out = data.checkOut || data.check_out || booking.check_out;
-    const guests = data.guests || data.roomsBooked || booking.guests;
+    const rooms_booked = Number(data.rooms_booked || data.roomsBooked || data.guests) || booking.rooms_booked || 1;
 
     // Validate dates
     const checkInDate = new Date(check_in);
@@ -178,27 +181,28 @@ router.put('/:id', auth, async (req, res) => {
 
     // Check availability (exclude current booking from overlap count)
     const overlapResult = await pool.query(
-      `SELECT COUNT(*) as booked FROM bookings
+      `SELECT COALESCE(SUM(rooms_booked), 0) as booked FROM bookings
        WHERE room_id = $1 AND status = 'confirmed' AND id != $4
        AND check_in < $3 AND check_out > $2`,
       [booking.room_id, check_in, check_out, bookingId]
     );
 
     const booked = parseInt(overlapResult.rows[0].booked, 10);
-    if (booked >= room.total_rooms) {
-      return res.status(400).json({ message: 'No rooms available for the selected dates' });
+    if (booked + rooms_booked > room.total_rooms) {
+      const available = room.total_rooms - booked;
+      return res.status(400).json({ message: available > 0 ? `Only ${available} room(s) available for the selected dates` : 'No rooms available for the selected dates' });
     }
 
-    // Recalculate total price
+    // Recalculate total price (price per night × nights × rooms)
     const nights = Math.ceil((checkOutDate - checkInDate) / (1000 * 60 * 60 * 24));
-    const total_price = nights * parseFloat(room.price);
+    const total_price = nights * parseFloat(room.price) * rooms_booked;
 
     // Update booking
     const result = await pool.query(
-      `UPDATE bookings SET check_in = $1, check_out = $2, guests = $3, total_price = $4
-       WHERE id = $5 AND user_id = $6
+      `UPDATE bookings SET check_in = $1, check_out = $2, guests = $3, rooms_booked = $4, total_price = $5
+       WHERE id = $6 AND user_id = $7
        RETURNING *`,
-      [check_in, check_out, guests, total_price, bookingId, user_id]
+      [check_in, check_out, rooms_booked, rooms_booked, total_price, bookingId, user_id]
     );
 
     const updated = result.rows[0];
@@ -214,7 +218,7 @@ router.put('/:id', auth, async (req, res) => {
       room_type: room.room_type,
       check_in: updated.check_in,
       check_out: updated.check_out,
-      guests: updated.guests,
+      rooms_booked: updated.rooms_booked,
       total_price: updated.total_price,
       status: updated.status
     });

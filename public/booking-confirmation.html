@@ -62,7 +62,7 @@
                   ${booking.room_type ? `<tr><th>Room Type</th><td>${booking.room_type}</td></tr>` : ''}
                   <tr><th>Check-in</th><td>${checkIn}</td></tr>
                   <tr><th>Check-out</th><td>${checkOut}</td></tr>
-                  <tr><th>Guests</th><td>${booking.guests || 1}</td></tr>
+                  <tr><th>Rooms Booked</th><td>${booking.rooms_booked || 1}</td></tr>
                   <tr><th>Total Price</th><td>INR ${totalPrice}</td></tr>
                   <tr><th>Status</th><td><span class="badge bg-success">${booking.status || 'confirmed'}</span></td></tr>
                 </tbody>
