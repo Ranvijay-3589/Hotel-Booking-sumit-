@@ -286,24 +286,10 @@
       };
 
       try {
-        let response;
-
-        // Try DELETE /api/bookings/:id first (standard REST)
-        response = await fetch(API_BASE + '/api/bookings/' + bookingId, {
-          method: 'DELETE',
+        const response = await fetch(API_BASE + '/api/bookings/delete/' + bookingId, {
+          method: 'POST',
           headers: headers
         });
-
-        // If DELETE is not supported by proxy, try POST /api/bookings/delete/:id
-        if (response.status === 404 || response.status === 405) {
-          const text = await response.text().catch(() => '');
-          if (text.includes('Cannot DELETE') || text.includes('Not Found') || response.status === 405) {
-            response = await fetch(API_BASE + '/api/bookings/delete/' + bookingId, {
-              method: 'POST',
-              headers: headers
-            });
-          }
-        }
 
         const contentType = response.headers.get('content-type');
         let data;
