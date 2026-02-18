@@ -155,9 +155,8 @@
       saveBtn.textContent = 'Saving...';
 
       try {
-        const queryStr = `?checkIn=${encodeURIComponent(checkIn)}&checkOut=${encodeURIComponent(checkOut)}&rooms_booked=${encodeURIComponent(rooms_booked)}`;
-        await hotelBooking.api.request('/api/bookings/' + bookingId + queryStr, {
-          method: 'PUT',
+        await hotelBooking.api.request('/api/bookings/update/' + bookingId, {
+          method: 'POST',
           body: JSON.stringify({ checkIn, checkOut, rooms_booked: Number(rooms_booked) })
         });
 
@@ -245,7 +244,18 @@
           const checkIn = formatDate(booking.check_in || booking.checkIn);
           const checkOut = formatDate(booking.check_out || booking.checkOut);
           const roomsBooked = booking.rooms_booked || booking.roomsBooked || 1;
-          const totalPrice = booking.total_price || booking.totalPrice || '';
+
+          // Calculate nights
+          let nights = 1;
+          const ciDate = new Date(booking.check_in || booking.checkIn);
+          const coDate = new Date(booking.check_out || booking.checkOut);
+          if (!isNaN(ciDate) && !isNaN(coDate)) {
+            nights = Math.ceil((coDate - ciDate) / (1000 * 60 * 60 * 24));
+            if (nights < 1) nights = 1;
+          }
+
+          // Use server total_price, or recalculate as fallback
+          const totalPrice = booking.total_price || booking.totalPrice || (pricePerNight ? (parseFloat(pricePerNight) * nights * roomsBooked) : '');
           const status = booking.status || 'confirmed';
           const bookingId = booking.id;
           const statusBadge = status === 'confirmed'
@@ -275,6 +285,7 @@
                 ${pricePerNight ? '<p class="mb-1"><strong>Price per night:</strong> INR ' + Number(pricePerNight).toLocaleString() + '</p>' : ''}
                 <p class="mb-1"><strong>Check-in:</strong> ${checkIn}</p>
                 <p class="mb-1"><strong>Check-out:</strong> ${checkOut}</p>
+                <p class="mb-1"><strong>Nights:</strong> ${nights}</p>
                 <p class="mb-1"><strong>Rooms booked:</strong> ${roomsBooked}</p>
                 ${totalPrice ? '<p class="mb-0"><strong>Total:</strong> INR ' + Number(totalPrice).toLocaleString() + '</p>' : ''}
               </div>

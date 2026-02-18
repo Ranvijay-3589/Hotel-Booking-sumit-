@@ -113,7 +113,7 @@ router.get('/my', auth, async (req, res) => {
       `SELECT b.id, b.user_id, b.room_id, b.hotel_id, b.check_in, b.check_out,
               b.rooms_booked, b.total_price, b.status, b.created_at,
               h.name as hotel_name, h.location as hotel_location, h.image_url,
-              r.room_type, r.price as room_price
+              r.room_type, r.price as price_per_night
        FROM bookings b
        JOIN hotels h ON h.id = b.hotel_id
        JOIN rooms r ON r.id = b.room_id
@@ -128,8 +128,8 @@ router.get('/my', auth, async (req, res) => {
   }
 });
 
-// PUT /api/bookings/:id - update booking dates/guests
-router.put('/:id', auth, async (req, res) => {
+// Shared update handler for PUT and POST
+async function handleUpdateBooking(req, res) {
   try {
     let body = req.body || {};
     if (typeof body === 'string') {
@@ -228,6 +228,12 @@ router.put('/:id', auth, async (req, res) => {
     console.error('Update booking error:', err.message);
     res.status(500).json({ message: 'Server error' });
   }
-});
+}
+
+// PUT /api/bookings/:id - update booking dates/guests
+router.put('/:id', auth, handleUpdateBooking);
+
+// POST /api/bookings/update/:id - fallback for proxies that don't forward PUT
+router.post('/update/:id', auth, handleUpdateBooking);
 
 module.exports = router;
