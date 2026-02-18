@@ -34,6 +34,16 @@
   <script>
     hotelBooking.ensureAuth();
 
+    // Generate a random 16-character alphanumeric booking ID
+    function generateBookingId() {
+      const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+      let id = '';
+      for (let i = 0; i < 16; i++) {
+        id += chars.charAt(Math.floor(Math.random() * chars.length));
+      }
+      return id;
+    }
+
     const query = new URLSearchParams(window.location.search);
     const hotelId = query.get('id');
 
@@ -89,7 +99,7 @@
 
         // Merge server response with known frontend data as fallback
         const bookingToStore = {
-          id: booking.id || 'N/A',
+          id: booking.id || generateBookingId(),
           room_id: booking.room_id || roomId,
           hotel_name: booking.hotel_name || (loadedHotel ? loadedHotel.name : ''),
           hotel_location: booking.hotel_location || (loadedHotel ? loadedHotel.location : ''),
