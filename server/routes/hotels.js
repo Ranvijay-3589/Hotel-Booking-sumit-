@@ -144,9 +144,8 @@ router.post('/',
   }
 );
 
-// PUT /api/hotels/:id - Update a hotel (authenticated users)
+// PUT /api/hotels/:id - Update a hotel
 router.put('/:id',
-  auth,
   [
     body('name').optional().trim().notEmpty().withMessage('Hotel name cannot be empty'),
     body('location').optional().trim().notEmpty().withMessage('Location cannot be empty'),
@@ -208,8 +207,8 @@ router.put('/:id',
   }
 );
 
-// DELETE /api/hotels/:id - Delete a hotel (authenticated users)
-router.delete('/:id', auth, async (req, res) => {
+// DELETE /api/hotels/:id - Delete a hotel
+router.delete('/:id', async (req, res) => {
   try {
     const hotel = await Hotel.findByPk(req.params.id, {
       include: [{ model: Room, as: 'rooms' }]

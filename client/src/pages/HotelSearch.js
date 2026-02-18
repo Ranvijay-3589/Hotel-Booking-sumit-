@@ -1,11 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { getHotels, updateHotel, deleteHotel } from '../services/api';
-import { useAuth } from '../context/AuthContext';
 import './HotelSearch.css';
 
 const HotelSearch = () => {
-  const { user } = useAuth();
   const [hotels, setHotels] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState({ location: '', min_price: '', max_price: '' });
@@ -241,24 +239,22 @@ const HotelSearch = () => {
                     </div>
                   </div>
                 </Link>
-                {user && (
-                  <div className="hotel-actions">
-                    <button
-                      className="action-btn edit-btn"
-                      onClick={(e) => openEditModal(e, hotel)}
-                      title="Edit Hotel"
-                    >
-                      Edit
-                    </button>
-                    <button
-                      className="action-btn delete-btn"
-                      onClick={(e) => openDeleteConfirm(e, hotel)}
-                      title="Delete Hotel"
-                    >
-                      Delete
-                    </button>
-                  </div>
-                )}
+                <div className="hotel-actions">
+                  <button
+                    className="action-btn edit-btn"
+                    onClick={(e) => openEditModal(e, hotel)}
+                    title="Edit Hotel"
+                  >
+                    Edit
+                  </button>
+                  <button
+                    className="action-btn delete-btn"
+                    onClick={(e) => openDeleteConfirm(e, hotel)}
+                    title="Delete Hotel"
+                  >
+                    Delete
+                  </button>
+                </div>
               </div>
             ))}
           </div>
