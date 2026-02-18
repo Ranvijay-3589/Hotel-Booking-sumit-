@@ -7,11 +7,20 @@ const router = express.Router();
 // POST /api/bookings - create a booking
 router.post('/', auth, async (req, res) => {
   try {
+    // Parse body — handle cases where JSON middleware may not have parsed
+    let body = req.body || {};
+    if (typeof body === 'string') {
+      try { body = JSON.parse(body); } catch (e) { body = {}; }
+    }
+
+    // Merge query params as fallback (in case body isn't forwarded by proxy)
+    const data = { ...req.query, ...body };
+
     // Accept both camelCase (frontend) and snake_case field names
-    const room_id = req.body.roomId || req.body.room_id;
-    const check_in = req.body.checkIn || req.body.check_in;
-    const check_out = req.body.checkOut || req.body.check_out;
-    const guests = req.body.guests || req.body.roomsBooked || 1;
+    const room_id = data.roomId || data.room_id;
+    const check_in = data.checkIn || data.check_in;
+    const check_out = data.checkOut || data.check_out;
+    const guests = data.guests || data.roomsBooked || 1;
     const user_id = req.user.id;
 
     if (!room_id || !check_in || !check_out) {
@@ -111,6 +120,106 @@ router.get('/my', auth, async (req, res) => {
     res.json(result.rows);
   } catch (err) {
     console.error('Get bookings error:', err.message);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// PUT /api/bookings/:id - update booking dates/guests
+router.put('/:id', auth, async (req, res) => {
+  try {
+    let body = req.body || {};
+    if (typeof body === 'string') {
+      try { body = JSON.parse(body); } catch (e) { body = {}; }
+    }
+    const data = { ...req.query, ...body };
+
+    const bookingId = req.params.id;
+    const user_id = req.user.id;
+
+    // Fetch existing booking owned by this user
+    const existing = await pool.query(
+      'SELECT * FROM bookings WHERE id = $1 AND user_id = $2',
+      [bookingId, user_id]
+    );
+    if (existing.rows.length === 0) {
+      return res.status(404).json({ message: 'Booking not found' });
+    }
+
+    const booking = existing.rows[0];
+
+    const check_in = data.checkIn || data.check_in || booking.check_in;
+    const check_out = data.checkOut || data.check_out || booking.check_out;
+    const guests = data.guests || data.roomsBooked || booking.guests;
+
+    // Validate dates
+    const checkInDate = new Date(check_in);
+    const checkOutDate = new Date(check_out);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    if (isNaN(checkInDate.getTime()) || isNaN(checkOutDate.getTime())) {
+      return res.status(400).json({ message: 'Invalid date format' });
+    }
+
+    if (checkInDate < today) {
+      return res.status(400).json({ message: 'Check-in date cannot be in the past' });
+    }
+
+    if (checkOutDate <= checkInDate) {
+      return res.status(400).json({ message: 'Check-out must be after check-in' });
+    }
+
+    // Get room details
+    const roomResult = await pool.query('SELECT * FROM rooms WHERE id = $1', [booking.room_id]);
+    if (roomResult.rows.length === 0) {
+      return res.status(404).json({ message: 'Room not found' });
+    }
+    const room = roomResult.rows[0];
+
+    // Check availability (exclude current booking from overlap count)
+    const overlapResult = await pool.query(
+      `SELECT COUNT(*) as booked FROM bookings
+       WHERE room_id = $1 AND status = 'confirmed' AND id != $4
+       AND check_in < $3 AND check_out > $2`,
+      [booking.room_id, check_in, check_out, bookingId]
+    );
+
+    const booked = parseInt(overlapResult.rows[0].booked, 10);
+    if (booked >= room.total_rooms) {
+      return res.status(400).json({ message: 'No rooms available for the selected dates' });
+    }
+
+    // Recalculate total price
+    const nights = Math.ceil((checkOutDate - checkInDate) / (1000 * 60 * 60 * 24));
+    const total_price = nights * parseFloat(room.price);
+
+    // Update booking
+    const result = await pool.query(
+      `UPDATE bookings SET check_in = $1, check_out = $2, guests = $3, total_price = $4
+       WHERE id = $5 AND user_id = $6
+       RETURNING *`,
+      [check_in, check_out, guests, total_price, bookingId, user_id]
+    );
+
+    const updated = result.rows[0];
+    const hotelResult = await pool.query('SELECT name, location FROM hotels WHERE id = $1', [updated.hotel_id]);
+    const hotel = hotelResult.rows[0];
+
+    res.json({
+      id: updated.id,
+      room_id: updated.room_id,
+      hotel_id: updated.hotel_id,
+      hotel_name: hotel ? hotel.name : '',
+      hotel_location: hotel ? hotel.location : '',
+      room_type: room.room_type,
+      check_in: updated.check_in,
+      check_out: updated.check_out,
+      guests: updated.guests,
+      total_price: updated.total_price,
+      status: updated.status
+    });
+  } catch (err) {
+    console.error('Update booking error:', err.message);
     res.status(500).json({ message: 'Server error' });
   }
 });

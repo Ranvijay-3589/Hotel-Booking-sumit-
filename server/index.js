@@ -11,6 +11,16 @@ const app = express();
 
 app.use(cors());
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(express.text());
+
+// Fallback: if body is a string (from text parser), try to parse as JSON
+app.use((req, res, next) => {
+  if (typeof req.body === 'string' && req.body.trim().startsWith('{')) {
+    try { req.body = JSON.parse(req.body); } catch (e) { /* keep as string */ }
+  }
+  next();
+});
 
 // API routes
 app.use('/api/auth', authRoutes);
