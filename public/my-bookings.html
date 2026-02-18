@@ -154,11 +154,52 @@
       saveBtn.disabled = true;
       saveBtn.textContent = 'Saving...';
 
+      const token = localStorage.getItem('token');
+      const API_BASE = (() => {
+        const origin = window.location.origin;
+        const pathMatch = window.location.pathname.match(/^\/([^/]+)\//);
+        return pathMatch ? origin + '/' + pathMatch[1] : origin;
+      })();
+      const payload = JSON.stringify({ checkIn, checkOut, rooms_booked: Number(rooms_booked) });
+      const headers = {
+        'Content-Type': 'application/json',
+        'Authorization': token ? 'Bearer ' + token : ''
+      };
+
       try {
-        await hotelBooking.api.request('/api/bookings/update/' + bookingId, {
-          method: 'POST',
-          body: JSON.stringify({ checkIn, checkOut, rooms_booked: Number(rooms_booked) })
+        let response;
+
+        // Try PUT /api/bookings/:id first (standard REST)
+        response = await fetch(API_BASE + '/api/bookings/' + bookingId, {
+          method: 'PUT',
+          headers: headers,
+          body: payload
         });
+
+        // If PUT is not supported by proxy, try POST /api/bookings/update/:id
+        if (response.status === 404 || response.status === 405) {
+          const text = await response.text().catch(() => '');
+          if (text.includes('Cannot PUT') || text.includes('Cannot POST') || text.includes('Not Found') || response.status === 405) {
+            response = await fetch(API_BASE + '/api/bookings/update/' + bookingId, {
+              method: 'POST',
+              headers: headers,
+              body: payload
+            });
+          }
+        }
+
+        const contentType = response.headers.get('content-type');
+        let data;
+        if (contentType && contentType.includes('application/json')) {
+          data = await response.json().catch(() => ({}));
+        } else {
+          const text = await response.text().catch(() => '');
+          try { data = JSON.parse(text); } catch (e) { data = { message: text }; }
+        }
+
+        if (!response.ok) {
+          throw new Error(data.message || 'Failed to update booking');
+        }
 
         successEl.textContent = 'Booking updated successfully!';
 

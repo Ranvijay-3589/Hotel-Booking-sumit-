@@ -233,7 +233,10 @@ async function handleUpdateBooking(req, res) {
 // PUT /api/bookings/:id - update booking dates/guests
 router.put('/:id', auth, handleUpdateBooking);
 
-// POST /api/bookings/update/:id - fallback for proxies that don't forward PUT
+// PATCH /api/bookings/:id - alternative update method
+router.patch('/:id', auth, handleUpdateBooking);
+
+// POST /api/bookings/update/:id - fallback for proxies that don't forward PUT/PATCH
 router.post('/update/:id', auth, handleUpdateBooking);
 
 module.exports = router;
