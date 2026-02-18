@@ -37,12 +37,28 @@
     const query = new URLSearchParams(window.location.search);
     const hotelId = query.get('id');
 
+    // Get today's date in YYYY-MM-DD format for min date
+    function getTodayStr() {
+      const d = new Date();
+      return d.toISOString().split('T')[0];
+    }
+
     async function bookRoom(roomId) {
       const checkIn = document.getElementById(`checkin-${roomId}`).value;
       const checkOut = document.getElementById(`checkout-${roomId}`).value;
       const roomsBooked = document.getElementById(`rooms-${roomId}`).value || 1;
       const statusEl = document.getElementById(`status-${roomId}`);
       statusEl.textContent = '';
+
+      if (!checkIn || !checkOut) {
+        statusEl.textContent = 'Please select check-in and check-out dates';
+        return;
+      }
+
+      if (checkOut <= checkIn) {
+        statusEl.textContent = 'Check-out date must be after check-in date';
+        return;
+      }
 
       try {
         const booking = await hotelBooking.api.request('/api/bookings', {
@@ -74,8 +90,10 @@
       `;
 
       const rooms = hotel.rooms || [];
+      const today = getTodayStr();
+
       const roomsHtml = rooms.map((room) => {
-        const activeBookings = (room.bookings || []).length;
+        const price = parseFloat(room.price_per_night || room.price);
         const availableStatus = room.available ? 'Yes' : 'No';
 
         return `
@@ -83,21 +101,21 @@
           <article class="card border-0 shadow-sm">
             <div class="card-body p-4">
               <h2 class="h5 mb-3">${room.room_type}</h2>
-              <p class="mb-1">Price: INR ${parseFloat(room.price_per_night).toLocaleString()} / night</p>
+              <p class="mb-1">Price: INR ${price.toLocaleString()} / night</p>
               <p class="text-secondary mb-1">Capacity: ${room.capacity} guest(s)</p>
               <p class="text-secondary mb-3">Available: <span class="badge ${room.available ? 'bg-success' : 'bg-danger'}">${availableStatus}</span></p>
               <div class="row g-3">
                 <div class="col-12 col-md-4">
                   <label for="checkin-${room.id}" class="form-label">Check-in</label>
-                  <input id="checkin-${room.id}" type="date" class="form-control" required />
+                  <input id="checkin-${room.id}" type="date" class="form-control" min="${today}" required />
                 </div>
                 <div class="col-12 col-md-4">
                   <label for="checkout-${room.id}" class="form-label">Check-out</label>
-                  <input id="checkout-${room.id}" type="date" class="form-control" required />
+                  <input id="checkout-${room.id}" type="date" class="form-control" min="${today}" required />
                 </div>
                 <div class="col-12 col-md-4">
                   <label for="rooms-${room.id}" class="form-label">Rooms</label>
-                  <input id="rooms-${room.id}" type="number" min="1" value="1" class="form-control" />
+                  <input id="rooms-${room.id}" type="number" min="1" max="${room.total_rooms}" value="1" class="form-control" />
                 </div>
               </div>
               <div class="d-grid d-md-inline-block mt-3">

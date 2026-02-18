@@ -17,11 +17,17 @@ app.use('/api/auth', authRoutes);
 app.use('/api/hotels', hotelRoutes);
 app.use('/api/bookings', bookingRoutes);
 
-// Serve static frontend
+// Serve static frontend from public directory
+const publicDir = path.join(__dirname, '..', 'public');
+app.use(express.static(publicDir));
+
+// Also serve client/build as fallback
 const clientBuild = path.join(__dirname, '..', 'client', 'build');
 app.use(express.static(clientBuild));
-app.get('*', (req, res) => {
-  res.sendFile(path.join(clientBuild, 'index.html'));
+
+// Fallback: serve hotels.html as the default page
+app.get('/', (req, res) => {
+  res.sendFile(path.join(publicDir, 'hotels.html'));
 });
 
 const PORT = process.env.PORT || 5000;

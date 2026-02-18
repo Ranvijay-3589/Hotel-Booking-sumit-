@@ -7,27 +7,43 @@ const router = express.Router();
 // POST /api/bookings - create a booking
 router.post('/', auth, async (req, res) => {
   try {
-    const { room_id, hotel_id, check_in, check_out, guests } = req.body;
+    // Accept both camelCase (frontend) and snake_case field names
+    const room_id = req.body.roomId || req.body.room_id;
+    const check_in = req.body.checkIn || req.body.check_in;
+    const check_out = req.body.checkOut || req.body.check_out;
+    const guests = req.body.guests || req.body.roomsBooked || 1;
     const user_id = req.user.id;
 
-    if (!room_id || !hotel_id || !check_in || !check_out) {
-      return res.status(400).json({ message: 'Please provide room_id, hotel_id, check_in, and check_out' });
+    if (!room_id || !check_in || !check_out) {
+      return res.status(400).json({ message: 'Please provide room_id, check_in, and check_out' });
     }
 
     // Validate dates
     const checkInDate = new Date(check_in);
     const checkOutDate = new Date(check_out);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    if (isNaN(checkInDate.getTime()) || isNaN(checkOutDate.getTime())) {
+      return res.status(400).json({ message: 'Invalid date format' });
+    }
+
+    if (checkInDate < today) {
+      return res.status(400).json({ message: 'Check-in date cannot be in the past' });
+    }
+
     if (checkOutDate <= checkInDate) {
       return res.status(400).json({ message: 'Check-out must be after check-in' });
     }
 
-    // Get room details
-    const roomResult = await pool.query('SELECT * FROM rooms WHERE id = $1 AND hotel_id = $2', [room_id, hotel_id]);
+    // Get room details (also resolves hotel_id from the room)
+    const roomResult = await pool.query('SELECT * FROM rooms WHERE id = $1', [room_id]);
     if (roomResult.rows.length === 0) {
       return res.status(404).json({ message: 'Room not found' });
     }
 
     const room = roomResult.rows[0];
+    const hotel_id = room.hotel_id;
 
     // Check availability: count overlapping bookings
     const overlapResult = await pool.query(
@@ -51,10 +67,28 @@ router.post('/', auth, async (req, res) => {
       `INSERT INTO bookings (user_id, room_id, hotel_id, check_in, check_out, guests, total_price)
        VALUES ($1, $2, $3, $4, $5, $6, $7)
        RETURNING *`,
-      [user_id, room_id, hotel_id, check_in, check_out, guests || 1, total_price]
+      [user_id, room_id, hotel_id, check_in, check_out, guests, total_price]
     );
 
-    res.status(201).json(result.rows[0]);
+    // Return booking with hotel and room info for the confirmation page
+    const booking = result.rows[0];
+    const hotelResult = await pool.query('SELECT name, location FROM hotels WHERE id = $1', [hotel_id]);
+    const hotel = hotelResult.rows[0];
+
+    res.status(201).json({
+      id: booking.id,
+      room_id: booking.room_id,
+      hotel_id: booking.hotel_id,
+      hotel_name: hotel ? hotel.name : '',
+      hotel_location: hotel ? hotel.location : '',
+      room_type: room.room_type,
+      check_in: booking.check_in,
+      check_out: booking.check_out,
+      guests: booking.guests,
+      total_price: booking.total_price,
+      status: booking.status,
+      created_at: booking.created_at
+    });
   } catch (err) {
     console.error('Create booking error:', err.message);
     res.status(500).json({ message: 'Server error' });

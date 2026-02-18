@@ -42,15 +42,37 @@
         </div>
       `;
     } else {
+      const checkIn = booking.check_in ? new Date(booking.check_in).toLocaleDateString() : 'N/A';
+      const checkOut = booking.check_out ? new Date(booking.check_out).toLocaleDateString() : 'N/A';
+      const totalPrice = booking.total_price ? parseFloat(booking.total_price).toLocaleString() : 'N/A';
+
       content.innerHTML = `
         <div class="card-body p-4">
-          <h1 class="h3 mb-4">Booking Confirmed</h1>
-          <p class="mb-2">Booking ID: <strong>${booking.id}</strong></p>
-          <p class="mb-2">Room ID: ${booking.roomId}</p>
-          <p class="mb-2">Check-in: ${booking.checkIn}</p>
-          <p class="mb-2">Check-out: ${booking.checkOut}</p>
-          <p class="mb-4">Rooms booked: ${booking.roomsBooked}</p>
-          <a class="btn btn-outline-primary" href="./my-bookings.html">View all bookings</a>
+          <div class="text-center mb-4">
+            <span class="badge bg-success fs-6 px-3 py-2">Booking Confirmed</span>
+          </div>
+          <h1 class="h3 mb-4 text-center">Thank you for your booking!</h1>
+          <div class="row justify-content-center">
+            <div class="col-12 col-md-8">
+              <table class="table">
+                <tbody>
+                  <tr><th>Booking ID</th><td>${booking.id}</td></tr>
+                  ${booking.hotel_name ? `<tr><th>Hotel</th><td>${booking.hotel_name}</td></tr>` : ''}
+                  ${booking.hotel_location ? `<tr><th>Location</th><td>${booking.hotel_location}</td></tr>` : ''}
+                  ${booking.room_type ? `<tr><th>Room Type</th><td>${booking.room_type}</td></tr>` : ''}
+                  <tr><th>Check-in</th><td>${checkIn}</td></tr>
+                  <tr><th>Check-out</th><td>${checkOut}</td></tr>
+                  <tr><th>Guests</th><td>${booking.guests || 1}</td></tr>
+                  <tr><th>Total Price</th><td>INR ${totalPrice}</td></tr>
+                  <tr><th>Status</th><td><span class="badge bg-success">${booking.status || 'confirmed'}</span></td></tr>
+                </tbody>
+              </table>
+              <div class="text-center mt-3">
+                <a class="btn btn-outline-primary me-2" href="./my-bookings.html">View All Bookings</a>
+                <a class="btn btn-primary" href="./hotels.html">Book Another Hotel</a>
+              </div>
+            </div>
+          </div>
         </div>
       `;
     }

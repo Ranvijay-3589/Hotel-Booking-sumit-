@@ -52,7 +52,7 @@ router.get('/', async (req, res) => {
   }
 });
 
-// GET /api/hotels/:id - hotel detail with rooms
+// GET /api/hotels/:id - hotel detail with rooms and availability
 router.get('/:id', async (req, res) => {
   try {
     const { id } = req.params;
@@ -64,11 +64,16 @@ router.get('/:id', async (req, res) => {
 
     const roomsResult = await pool.query('SELECT * FROM rooms WHERE hotel_id = $1 ORDER BY price ASC', [id]);
 
-    // For each room, count bookings that overlap with potential dates
     const hotel = hotelResult.rows[0];
-    hotel.rooms = roomsResult.rows;
 
-    res.json(hotel);
+    // Add availability info and price_per_night alias for each room
+    hotel.rooms = roomsResult.rows.map(room => ({
+      ...room,
+      price_per_night: room.price,
+      available: room.total_rooms > 0
+    }));
+
+    res.json({ hotel });
   } catch (err) {
     console.error('Hotel detail error:', err.message);
     res.status(500).json({ message: 'Server error' });
