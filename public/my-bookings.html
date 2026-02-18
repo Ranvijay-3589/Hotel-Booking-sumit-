@@ -32,7 +32,18 @@
       </div>
     </section>
 
-    <section id="list" class="row g-3"></section>
+    <section id="list" class="row g-3">
+      <div class="col-12">
+        <div class="card border-0 shadow-sm">
+          <div class="card-body text-center py-4">
+            <div class="spinner-border text-primary" role="status">
+              <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="mt-2 mb-0 text-secondary">Loading your bookings...</p>
+          </div>
+        </div>
+      </div>
+    </section>
   </main>
 
   <!-- Edit Booking Modal -->
@@ -94,7 +105,7 @@
     }
 
     function openEditModal(bookingId) {
-      const booking = allBookings.find(b => b.id === bookingId);
+      const booking = allBookings.find(b => String(b.id) === String(bookingId));
       if (!booking) return;
 
       document.getElementById('editBookingId').value = booking.id;
@@ -144,7 +155,8 @@
       saveBtn.textContent = 'Saving...';
 
       try {
-        await hotelBooking.api.request('/api/bookings/' + bookingId, {
+        const queryStr = `?checkIn=${encodeURIComponent(checkIn)}&checkOut=${encodeURIComponent(checkOut)}&guests=${encodeURIComponent(guests)}`;
+        await hotelBooking.api.request('/api/bookings/' + bookingId + queryStr, {
           method: 'PUT',
           body: JSON.stringify({ checkIn, checkOut, guests: Number(guests) })
         });
@@ -163,43 +175,119 @@
       }
     }
 
-    async function loadBookings() {
-      const bookings = await hotelBooking.api.request('/api/bookings/my');
-      allBookings = bookings;
-      const list = document.getElementById('list');
-
-      if (!bookings.length) {
-        list.innerHTML = '<div class="col-12"><div class="card border-0 shadow-sm"><div class="card-body"><p class="mb-0">No bookings yet.</p></div></div></div>';
-        return;
-      }
-
-      list.innerHTML = bookings.map((booking) => `
-        <div class="col-12 col-lg-6">
-          <article class="card border-0 shadow-sm h-100">
-            <div class="card-body">
-              <div class="d-flex justify-content-between align-items-start mb-3">
-                <h2 class="h5 mb-0">${booking.hotel_name} (${booking.hotel_location})</h2>
-                <button class="btn btn-outline-primary btn-sm" onclick="openEditModal(${booking.id})" title="Edit Booking">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16" style="vertical-align:-2px">
-                    <path d="M12.146.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1 0 .708l-10 10a.5.5 0 0 1-.168.11l-5 2a.5.5 0 0 1-.65-.65l2-5a.5.5 0 0 1 .11-.168l10-10zM11.207 2.5 13.5 4.793 14.793 3.5 12.5 1.207 11.207 2.5zm1.586 3L10.5 3.207 4 9.707V10h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.293l6.5-6.5zm-9.761 5.175-.106.106-1.528 3.821 3.821-1.528.106-.106A.5.5 0 0 1 5 12.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.468-.325z"/>
-                  </svg>
-                  Edit
-                </button>
-              </div>
-              <p class="mb-1">Room Type: ${booking.room_type}</p>
-              <p class="mb-1">Price per night: INR ${booking.price_per_night || booking.room_price}</p>
-              <p class="mb-1">Check-in: ${formatDate(booking.check_in)}</p>
-              <p class="mb-1">Check-out: ${formatDate(booking.check_out)}</p>
-              <p class="mb-0">Rooms booked: ${booking.guests || booking.rooms_booked}</p>
-            </div>
-          </article>
-        </div>
-      `).join('');
+    // Extract bookings array from API response (handles different formats)
+    function extractBookings(data) {
+      // If it's already an array, return it
+      if (Array.isArray(data)) return data;
+      // If it's an object with a bookings array property
+      if (data && Array.isArray(data.bookings)) return data.bookings;
+      // If it's an object with a data array property
+      if (data && Array.isArray(data.data)) return data.data;
+      // If it's an object with rows array (raw DB response)
+      if (data && Array.isArray(data.rows)) return data.rows;
+      return [];
     }
 
-    loadBookings().catch((error) => {
-      document.getElementById('list').innerHTML = `<div class="col-12"><div class="card border-0 shadow-sm"><div class="card-body"><p class="text-danger mb-0">${error.message}</p></div></div></div>`;
-    });
+    async function loadBookings() {
+      const list = document.getElementById('list');
+
+      try {
+        // Use fetch directly for more control over the response
+        const token = localStorage.getItem('token');
+        const API_BASE = (() => {
+          const origin = window.location.origin;
+          const pathMatch = window.location.pathname.match(/^\/([^/]+)\//);
+          return pathMatch ? origin + '/' + pathMatch[1] : origin;
+        })();
+
+        const response = await fetch(API_BASE + '/api/bookings/my', {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': token ? 'Bearer ' + token : ''
+          }
+        });
+
+        if (response.status === 401) {
+          hotelBooking.logout();
+          return;
+        }
+
+        let bookings = [];
+        const contentType = response.headers.get('content-type');
+
+        if (contentType && contentType.includes('application/json')) {
+          const data = await response.json();
+          bookings = extractBookings(data);
+        } else {
+          // Try parsing as JSON anyway (proxy might strip content-type)
+          const text = await response.text();
+          try {
+            const data = JSON.parse(text);
+            bookings = extractBookings(data);
+          } catch (e) {
+            bookings = [];
+          }
+        }
+
+        allBookings = bookings;
+
+        if (!bookings || bookings.length === 0) {
+          list.innerHTML = '<div class="col-12"><div class="card border-0 shadow-sm"><div class="card-body"><p class="mb-0">No bookings yet.</p></div></div></div>';
+          return;
+        }
+
+        list.innerHTML = bookings.map((booking) => {
+          const hotelName = booking.hotel_name || booking.Hotel?.name || 'N/A';
+          const hotelLocation = booking.hotel_location || booking.Hotel?.location || '';
+          const roomType = booking.room_type || booking.Room?.room_type || 'N/A';
+          const pricePerNight = booking.price_per_night || booking.room_price || booking.Room?.price || '';
+          const checkIn = formatDate(booking.check_in || booking.checkIn);
+          const checkOut = formatDate(booking.check_out || booking.checkOut);
+          const roomsBooked = booking.guests || booking.rooms_booked || booking.roomsBooked || 1;
+          const totalPrice = booking.total_price || booking.totalPrice || '';
+          const status = booking.status || 'confirmed';
+          const bookingId = booking.id;
+          const statusBadge = status === 'confirmed'
+            ? '<span class="badge bg-success">Confirmed</span>'
+            : status === 'cancelled'
+              ? '<span class="badge bg-danger">Cancelled</span>'
+              : '<span class="badge bg-secondary">' + status + '</span>';
+
+          return `
+          <div class="col-12 col-lg-6">
+            <article class="card border-0 shadow-sm h-100">
+              <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                  <div>
+                    <h2 class="h5 mb-1">${hotelName}${hotelLocation ? ' (' + hotelLocation + ')' : ''}</h2>
+                    <p class="mb-0">${statusBadge}</p>
+                  </div>
+                  <button class="btn btn-outline-primary btn-sm" onclick="openEditModal('${bookingId}')" title="Edit Booking">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16" style="vertical-align:-2px">
+                      <path d="M12.146.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1 0 .708l-10 10a.5.5 0 0 1-.168.11l-5 2a.5.5 0 0 1-.65-.65l2-5a.5.5 0 0 1 .11-.168l10-10zM11.207 2.5 13.5 4.793 14.793 3.5 12.5 1.207 11.207 2.5zm1.586 3L10.5 3.207 4 9.707V10h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.293l6.5-6.5zm-9.761 5.175-.106.106-1.528 3.821 3.821-1.528.106-.106A.5.5 0 0 1 5 12.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.468-.325z"/>
+                    </svg>
+                    Edit
+                  </button>
+                </div>
+                <p class="mb-1"><strong>Booking ID:</strong> #${bookingId}</p>
+                <p class="mb-1"><strong>Room Type:</strong> ${roomType}</p>
+                ${pricePerNight ? '<p class="mb-1"><strong>Price per night:</strong> INR ' + Number(pricePerNight).toLocaleString() + '</p>' : ''}
+                <p class="mb-1"><strong>Check-in:</strong> ${checkIn}</p>
+                <p class="mb-1"><strong>Check-out:</strong> ${checkOut}</p>
+                <p class="mb-1"><strong>Rooms booked:</strong> ${roomsBooked}</p>
+                ${totalPrice ? '<p class="mb-0"><strong>Total:</strong> INR ' + Number(totalPrice).toLocaleString() + '</p>' : ''}
+              </div>
+            </article>
+          </div>`;
+        }).join('');
+
+      } catch (error) {
+        list.innerHTML = `<div class="col-12"><div class="card border-0 shadow-sm"><div class="card-body"><p class="text-danger mb-0">Failed to load bookings: ${error.message}</p></div></div></div>`;
+      }
+    }
+
+    loadBookings();
   </script>
 </body>
 </html>
