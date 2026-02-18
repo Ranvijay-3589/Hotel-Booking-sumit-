@@ -43,6 +43,10 @@
       return d.toISOString().split('T')[0];
     }
 
+    // Store loaded hotel and room data for use in booking
+    let loadedHotel = null;
+    let loadedRooms = [];
+
     async function bookRoom(roomId) {
       const checkInEl = document.getElementById(`checkin-${roomId}`);
       const checkOutEl = document.getElementById(`checkout-${roomId}`);
@@ -62,6 +66,12 @@
         return;
       }
 
+      // Find the room details from loaded data
+      const room = loadedRooms.find(r => String(r.id) === String(roomId));
+      const pricePerNight = room ? parseFloat(room.price_per_night || room.price) : 0;
+      const nights = Math.ceil((new Date(checkOut) - new Date(checkIn)) / (1000 * 60 * 60 * 24));
+      const calculatedTotal = nights * pricePerNight;
+
       const bookingData = {
         room_id: Number(roomId),
         check_in: checkIn,
@@ -76,7 +86,22 @@
           method: 'POST',
           body: JSON.stringify(bookingData)
         });
-        sessionStorage.setItem('latestBooking', JSON.stringify(booking));
+
+        // Merge server response with known frontend data as fallback
+        const bookingToStore = {
+          id: booking.id || 'N/A',
+          room_id: booking.room_id || roomId,
+          hotel_name: booking.hotel_name || (loadedHotel ? loadedHotel.name : ''),
+          hotel_location: booking.hotel_location || (loadedHotel ? loadedHotel.location : ''),
+          room_type: booking.room_type || (room ? room.room_type : ''),
+          check_in: booking.check_in || checkIn,
+          check_out: booking.check_out || checkOut,
+          guests: booking.guests || Number(roomsBooked),
+          total_price: booking.total_price || calculatedTotal,
+          status: booking.status || 'confirmed'
+        };
+
+        sessionStorage.setItem('latestBooking', JSON.stringify(bookingToStore));
         window.location.href = './booking-confirmation.html';
       } catch (error) {
         statusEl.textContent = error.message;
@@ -91,6 +116,7 @@
 
       const data = await hotelBooking.api.request(`/api/hotels/${hotelId}`);
       const hotel = data.hotel;
+      loadedHotel = hotel;
 
       document.getElementById('hotelDetail').innerHTML = `
         <div class="card-body p-4">
@@ -101,6 +127,7 @@
       `;
 
       const rooms = hotel.rooms || [];
+      loadedRooms = rooms;
       const today = getTodayStr();
 
       const roomsHtml = rooms.map((room) => {
