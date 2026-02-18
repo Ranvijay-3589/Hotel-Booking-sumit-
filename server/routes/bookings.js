@@ -95,6 +95,7 @@ router.post('/', auth, async (req, res) => {
       check_in: booking.check_in,
       check_out: booking.check_out,
       rooms_booked: booking.rooms_booked,
+      price_per_night: parseFloat(room.price),
       total_price: booking.total_price,
       status: booking.status,
       created_at: booking.created_at
@@ -219,6 +220,7 @@ router.put('/:id', auth, async (req, res) => {
       check_in: updated.check_in,
       check_out: updated.check_out,
       rooms_booked: updated.rooms_booked,
+      price_per_night: parseFloat(room.price),
       total_price: updated.total_price,
       status: updated.status
     });

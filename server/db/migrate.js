@@ -56,6 +56,7 @@ const migrate = async () => {
         check_in DATE NOT NULL,
         check_out DATE NOT NULL,
         guests INTEGER DEFAULT 1,
+        rooms_booked INTEGER NOT NULL DEFAULT 1,
         total_price NUMERIC(10,2) NOT NULL,
         status VARCHAR(20) DEFAULT 'confirmed',
         created_at TIMESTAMP NOT NULL DEFAULT NOW()
