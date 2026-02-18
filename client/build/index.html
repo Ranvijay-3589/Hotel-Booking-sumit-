@@ -1,0 +1,1004 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hotel Booking</title>
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: #f5f7fa;
+      color: #1a1a2e;
+      line-height: 1.6;
+    }
+
+    /* Navbar */
+    .navbar {
+      background: #fff;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+      padding: 0 24px;
+      height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .navbar-brand {
+      font-size: 22px;
+      font-weight: 700;
+      color: #2563eb;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .navbar-brand svg { width: 28px; height: 28px; }
+    .navbar-links { display: flex; gap: 8px; align-items: center; }
+    .navbar-links button {
+      padding: 8px 16px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 500;
+      transition: all 0.2s;
+    }
+    .btn-ghost { background: transparent; color: #4b5563; }
+    .btn-ghost:hover { background: #f3f4f6; color: #1a1a2e; }
+    .btn-primary {
+      background: #2563eb;
+      color: #fff;
+    }
+    .btn-primary:hover { background: #1d4ed8; }
+    .btn-danger { background: #ef4444; color: #fff; }
+    .btn-danger:hover { background: #dc2626; }
+    .btn-outline {
+      background: transparent;
+      border: 1.5px solid #2563eb;
+      color: #2563eb;
+    }
+    .btn-outline:hover { background: #eff6ff; }
+
+    /* Layout */
+    .container { max-width: 1200px; margin: 0 auto; padding: 24px; }
+    .page-title {
+      font-size: 28px;
+      font-weight: 700;
+      margin-bottom: 24px;
+      color: #1e293b;
+    }
+
+    /* Hero */
+    .hero {
+      background: linear-gradient(135deg, #1e3a5f 0%, #2563eb 100%);
+      color: #fff;
+      padding: 80px 24px;
+      text-align: center;
+    }
+    .hero h1 { font-size: 42px; font-weight: 700; margin-bottom: 16px; }
+    .hero p { font-size: 18px; opacity: 0.9; margin-bottom: 32px; max-width: 600px; margin-left: auto; margin-right: auto; }
+
+    /* Search Bar */
+    .search-bar {
+      display: flex;
+      gap: 12px;
+      max-width: 700px;
+      margin: 0 auto;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .search-bar input, .search-bar select {
+      padding: 14px 18px;
+      border: none;
+      border-radius: 12px;
+      font-size: 15px;
+      flex: 1;
+      min-width: 180px;
+      outline: none;
+    }
+    .search-bar button {
+      padding: 14px 32px;
+      background: #f59e0b;
+      color: #1a1a2e;
+      border: none;
+      border-radius: 12px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .search-bar button:hover { background: #d97706; }
+
+    /* Cards */
+    .hotel-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 24px;
+      margin-top: 24px;
+    }
+    .hotel-card {
+      background: #fff;
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+      transition: transform 0.2s, box-shadow 0.2s;
+      cursor: pointer;
+    }
+    .hotel-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+    }
+    .hotel-card img {
+      width: 100%;
+      height: 220px;
+      object-fit: cover;
+    }
+    .hotel-card-body { padding: 20px; }
+    .hotel-card-body h3 { font-size: 18px; font-weight: 600; margin-bottom: 8px; }
+    .hotel-location { color: #6b7280; font-size: 14px; margin-bottom: 8px; display: flex; align-items: center; gap: 4px; }
+    .hotel-rating { color: #f59e0b; font-weight: 600; font-size: 14px; }
+    .hotel-price { font-size: 18px; font-weight: 700; color: #2563eb; margin-top: 8px; }
+    .hotel-price span { font-size: 13px; font-weight: 400; color: #9ca3af; }
+
+    /* Forms */
+    .auth-container {
+      max-width: 440px;
+      margin: 60px auto;
+      background: #fff;
+      border-radius: 16px;
+      padding: 40px;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+    }
+    .auth-container h2 { font-size: 24px; font-weight: 700; margin-bottom: 8px; text-align: center; }
+    .auth-container .subtitle { text-align: center; color: #6b7280; margin-bottom: 28px; font-size: 14px; }
+    .form-group { margin-bottom: 18px; }
+    .form-group label { display: block; font-size: 14px; font-weight: 500; margin-bottom: 6px; color: #374151; }
+    .form-group input {
+      width: 100%;
+      padding: 12px 14px;
+      border: 1.5px solid #d1d5db;
+      border-radius: 10px;
+      font-size: 15px;
+      transition: border-color 0.2s;
+      outline: none;
+    }
+    .form-group input:focus { border-color: #2563eb; }
+    .form-submit {
+      width: 100%;
+      padding: 14px;
+      background: #2563eb;
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 8px;
+      transition: background 0.2s;
+    }
+    .form-submit:hover { background: #1d4ed8; }
+    .form-submit:disabled { background: #93c5fd; cursor: not-allowed; }
+    .form-link { text-align: center; margin-top: 18px; font-size: 14px; color: #6b7280; }
+    .form-link a { color: #2563eb; cursor: pointer; font-weight: 500; text-decoration: none; }
+    .form-link a:hover { text-decoration: underline; }
+    .error-msg { background: #fef2f2; color: #dc2626; padding: 10px 14px; border-radius: 8px; margin-bottom: 16px; font-size: 14px; }
+    .success-msg { background: #f0fdf4; color: #16a34a; padding: 10px 14px; border-radius: 8px; margin-bottom: 16px; font-size: 14px; }
+
+    /* Hotel Detail */
+    .hotel-detail { max-width: 900px; margin: 0 auto; }
+    .hotel-detail-img {
+      width: 100%;
+      height: 400px;
+      object-fit: cover;
+      border-radius: 16px;
+      margin-bottom: 24px;
+    }
+    .hotel-detail h1 { font-size: 32px; font-weight: 700; margin-bottom: 8px; }
+    .hotel-detail .meta { color: #6b7280; margin-bottom: 16px; font-size: 15px; }
+    .hotel-detail .description { font-size: 15px; color: #4b5563; line-height: 1.8; margin-bottom: 32px; }
+
+    /* Room Cards */
+    .room-card {
+      background: #fff;
+      border-radius: 12px;
+      padding: 24px;
+      margin-bottom: 16px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+    .room-info h3 { font-size: 18px; font-weight: 600; margin-bottom: 4px; }
+    .room-info p { font-size: 13px; color: #6b7280; }
+    .room-meta { display: flex; gap: 12px; margin-top: 8px; }
+    .room-meta span {
+      background: #f3f4f6;
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 12px;
+      color: #4b5563;
+    }
+    .room-action { text-align: right; }
+    .room-action .price { font-size: 22px; font-weight: 700; color: #2563eb; }
+    .room-action .price-sub { font-size: 12px; color: #9ca3af; }
+    .room-action button {
+      margin-top: 8px;
+      padding: 10px 24px;
+      background: #2563eb;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .room-action button:hover { background: #1d4ed8; }
+
+    /* Booking Form */
+    .booking-form {
+      background: #fff;
+      border-radius: 16px;
+      padding: 32px;
+      max-width: 500px;
+      margin: 40px auto;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+    }
+    .booking-form h2 { margin-bottom: 24px; }
+    .date-row { display: flex; gap: 12px; }
+    .date-row .form-group { flex: 1; }
+
+    /* Booking Confirmation */
+    .confirmation {
+      max-width: 600px;
+      margin: 60px auto;
+      text-align: center;
+      background: #fff;
+      border-radius: 16px;
+      padding: 48px;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+    }
+    .confirmation .checkmark {
+      width: 72px;
+      height: 72px;
+      background: #dcfce7;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 24px;
+      font-size: 36px;
+      color: #16a34a;
+    }
+    .confirmation h2 { font-size: 24px; margin-bottom: 12px; }
+    .confirmation .details { text-align: left; margin: 24px 0; padding: 20px; background: #f9fafb; border-radius: 10px; }
+    .confirmation .details p { padding: 6px 0; font-size: 14px; color: #4b5563; }
+    .confirmation .details strong { color: #1e293b; }
+
+    /* My Bookings */
+    .booking-list { max-width: 800px; margin: 0 auto; }
+    .booking-item {
+      background: #fff;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 16px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+      display: flex;
+      gap: 16px;
+      align-items: center;
+    }
+    .booking-item img {
+      width: 120px;
+      height: 80px;
+      object-fit: cover;
+      border-radius: 8px;
+      flex-shrink: 0;
+    }
+    .booking-item-info { flex: 1; }
+    .booking-item-info h3 { font-size: 16px; font-weight: 600; margin-bottom: 4px; }
+    .booking-item-info p { font-size: 13px; color: #6b7280; margin: 2px 0; }
+    .booking-status {
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+    .status-confirmed { background: #dcfce7; color: #16a34a; }
+    .status-cancelled { background: #fef2f2; color: #ef4444; }
+    .booking-total { font-size: 18px; font-weight: 700; color: #2563eb; text-align: right; min-width: 100px; }
+
+    /* Loading */
+    .loading {
+      text-align: center;
+      padding: 60px;
+      color: #6b7280;
+    }
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 4px solid #e5e7eb;
+      border-top-color: #2563eb;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin: 0 auto 16px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .empty-state {
+      text-align: center;
+      padding: 60px 24px;
+      color: #9ca3af;
+    }
+    .empty-state h3 { font-size: 20px; color: #6b7280; margin-bottom: 8px; }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .hero h1 { font-size: 28px; }
+      .hero p { font-size: 15px; }
+      .search-bar { flex-direction: column; }
+      .search-bar input, .search-bar select, .search-bar button { min-width: auto; width: 100%; }
+      .hotel-grid { grid-template-columns: 1fr; }
+      .booking-item { flex-direction: column; text-align: center; }
+      .booking-item img { width: 100%; height: 160px; }
+      .booking-total { text-align: center; }
+      .room-card { flex-direction: column; text-align: center; }
+      .room-action { text-align: center; }
+    }
+
+    .back-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: #2563eb;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      background: none;
+      border: none;
+      margin-bottom: 16px;
+      padding: 0;
+    }
+    .back-btn:hover { text-decoration: underline; }
+
+    /* Filter bar on search page */
+    .filter-bar {
+      background: #fff;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 24px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      align-items: flex-end;
+    }
+    .filter-bar .form-group { margin-bottom: 0; flex: 1; min-width: 160px; }
+    .filter-bar input, .filter-bar select {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1.5px solid #d1d5db;
+      border-radius: 8px;
+      font-size: 14px;
+      outline: none;
+    }
+    .filter-bar input:focus, .filter-bar select:focus { border-color: #2563eb; }
+    .filter-bar button {
+      padding: 10px 20px;
+      background: #2563eb;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      height: 42px;
+    }
+    .filter-bar button:hover { background: #1d4ed8; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="text/babel">
+    const { useState, useEffect, createContext, useContext } = React;
+
+    // ---- API Helper ----
+    const api = async (url, options = {}) => {
+      const token = localStorage.getItem('token');
+      const headers = { 'Content-Type': 'application/json' };
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+      const res = await fetch(url, { ...options, headers: { ...headers, ...options.headers } });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || 'Something went wrong');
+      return data;
+    };
+
+    // ---- Auth Context ----
+    const AuthContext = createContext();
+    const useAuth = () => useContext(AuthContext);
+
+    function AuthProvider({ children }) {
+      const [user, setUser] = useState(null);
+      const [loading, setLoading] = useState(true);
+
+      useEffect(() => {
+        const token = localStorage.getItem('token');
+        if (token) {
+          api('/api/auth/me')
+            .then(u => setUser(u))
+            .catch(() => localStorage.removeItem('token'))
+            .finally(() => setLoading(false));
+        } else {
+          setLoading(false);
+        }
+      }, []);
+
+      const login = (token, userData) => {
+        localStorage.setItem('token', token);
+        setUser(userData);
+      };
+
+      const logout = () => {
+        localStorage.removeItem('token');
+        setUser(null);
+      };
+
+      return (
+        <AuthContext.Provider value={{ user, loading, login, logout }}>
+          {children}
+        </AuthContext.Provider>
+      );
+    }
+
+    // ---- Simple Router ----
+    function useRouter() {
+      const [path, setPath] = useState(window.location.hash.slice(1) || '/');
+      useEffect(() => {
+        const handler = () => setPath(window.location.hash.slice(1) || '/');
+        window.addEventListener('hashchange', handler);
+        return () => window.removeEventListener('hashchange', handler);
+      }, []);
+      const navigate = (to) => { window.location.hash = to; };
+      return { path, navigate };
+    }
+
+    // ---- Navbar ----
+    function Navbar({ navigate }) {
+      const { user, logout } = useAuth();
+      return (
+        <nav className="navbar">
+          <div className="navbar-brand" onClick={() => navigate('/')}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M3 21h18M3 7v14M21 7v14M6 11h4M6 15h4M14 11h4M14 15h4M10 21V17h4v4M12 3l9 4H3l9-4z"/>
+            </svg>
+            Hotel Booking
+          </div>
+          <div className="navbar-links">
+            <button className="btn-ghost" onClick={() => navigate('/')}>Hotels</button>
+            {user ? (
+              <>
+                <button className="btn-ghost" onClick={() => navigate('/my-bookings')}>My Bookings</button>
+                <button className="btn-outline" onClick={() => { logout(); navigate('/'); }}>Logout</button>
+              </>
+            ) : (
+              <>
+                <button className="btn-ghost" onClick={() => navigate('/login')}>Login</button>
+                <button className="btn-primary" onClick={() => navigate('/register')}>Register</button>
+              </>
+            )}
+          </div>
+        </nav>
+      );
+    }
+
+    // ---- Pages ----
+
+    // Register
+    function RegisterPage({ navigate }) {
+      const { login } = useAuth();
+      const [form, setForm] = useState({ name: '', email: '', password: '' });
+      const [error, setError] = useState('');
+      const [loading, setLoading] = useState(false);
+
+      const handleSubmit = async (e) => {
+        e.preventDefault();
+        setError('');
+        setLoading(true);
+        try {
+          const data = await api('/api/auth/register', {
+            method: 'POST',
+            body: JSON.stringify(form),
+          });
+          login(data.token, data.user);
+          navigate('/');
+        } catch (err) {
+          setError(err.message);
+        } finally {
+          setLoading(false);
+        }
+      };
+
+      return (
+        <div className="auth-container">
+          <h2>Create Account</h2>
+          <p className="subtitle">Join us to book your perfect stay</p>
+          {error && <div className="error-msg">{error}</div>}
+          <form onSubmit={handleSubmit}>
+            <div className="form-group">
+              <label>Full Name</label>
+              <input type="text" placeholder="John Doe" value={form.name}
+                onChange={e => setForm({...form, name: e.target.value})} required />
+            </div>
+            <div className="form-group">
+              <label>Email</label>
+              <input type="email" placeholder="john@example.com" value={form.email}
+                onChange={e => setForm({...form, email: e.target.value})} required />
+            </div>
+            <div className="form-group">
+              <label>Password</label>
+              <input type="password" placeholder="Min 6 characters" value={form.password}
+                onChange={e => setForm({...form, password: e.target.value})} required minLength="6" />
+            </div>
+            <button type="submit" className="form-submit" disabled={loading}>
+              {loading ? 'Creating account...' : 'Create Account'}
+            </button>
+          </form>
+          <p className="form-link">Already have an account? <a onClick={() => navigate('/login')}>Login</a></p>
+        </div>
+      );
+    }
+
+    // Login
+    function LoginPage({ navigate }) {
+      const { login } = useAuth();
+      const [form, setForm] = useState({ email: '', password: '' });
+      const [error, setError] = useState('');
+      const [loading, setLoading] = useState(false);
+
+      const handleSubmit = async (e) => {
+        e.preventDefault();
+        setError('');
+        setLoading(true);
+        try {
+          const data = await api('/api/auth/login', {
+            method: 'POST',
+            body: JSON.stringify(form),
+          });
+          login(data.token, data.user);
+          navigate('/');
+        } catch (err) {
+          setError(err.message);
+        } finally {
+          setLoading(false);
+        }
+      };
+
+      return (
+        <div className="auth-container">
+          <h2>Welcome Back</h2>
+          <p className="subtitle">Login to manage your bookings</p>
+          {error && <div className="error-msg">{error}</div>}
+          <form onSubmit={handleSubmit}>
+            <div className="form-group">
+              <label>Email</label>
+              <input type="email" placeholder="john@example.com" value={form.email}
+                onChange={e => setForm({...form, email: e.target.value})} required />
+            </div>
+            <div className="form-group">
+              <label>Password</label>
+              <input type="password" placeholder="Your password" value={form.password}
+                onChange={e => setForm({...form, password: e.target.value})} required />
+            </div>
+            <button type="submit" className="form-submit" disabled={loading}>
+              {loading ? 'Logging in...' : 'Login'}
+            </button>
+          </form>
+          <p className="form-link">Don't have an account? <a onClick={() => navigate('/register')}>Register</a></p>
+        </div>
+      );
+    }
+
+    // Home / Hotel Search
+    function HomePage({ navigate }) {
+      const [hotels, setHotels] = useState([]);
+      const [loading, setLoading] = useState(true);
+      const [search, setSearch] = useState('');
+      const [minPrice, setMinPrice] = useState('');
+      const [maxPrice, setMaxPrice] = useState('');
+
+      const fetchHotels = async (params = {}) => {
+        setLoading(true);
+        try {
+          const query = new URLSearchParams();
+          if (params.search) query.set('search', params.search);
+          if (params.min_price) query.set('min_price', params.min_price);
+          if (params.max_price) query.set('max_price', params.max_price);
+          const data = await api(`/api/hotels?${query.toString()}`);
+          setHotels(data);
+        } catch (err) {
+          console.error(err);
+        } finally {
+          setLoading(false);
+        }
+      };
+
+      useEffect(() => { fetchHotels(); }, []);
+
+      const handleSearch = (e) => {
+        e.preventDefault();
+        fetchHotels({ search, min_price: minPrice, max_price: maxPrice });
+      };
+
+      return (
+        <div>
+          <div className="hero">
+            <h1>Find Your Perfect Stay</h1>
+            <p>Discover amazing hotels at the best prices. Book your dream vacation today.</p>
+            <form className="search-bar" onSubmit={handleSearch}>
+              <input type="text" placeholder="Search by city or hotel name..." value={search}
+                onChange={e => setSearch(e.target.value)} />
+              <button type="submit">Search</button>
+            </form>
+          </div>
+          <div className="container">
+            <div className="filter-bar">
+              <div className="form-group">
+                <label>Location</label>
+                <input type="text" placeholder="City name" value={search}
+                  onChange={e => setSearch(e.target.value)} />
+              </div>
+              <div className="form-group">
+                <label>Min Price</label>
+                <input type="number" placeholder="0" value={minPrice}
+                  onChange={e => setMinPrice(e.target.value)} />
+              </div>
+              <div className="form-group">
+                <label>Max Price</label>
+                <input type="number" placeholder="Any" value={maxPrice}
+                  onChange={e => setMaxPrice(e.target.value)} />
+              </div>
+              <button onClick={handleSearch}>Filter</button>
+            </div>
+
+            {loading ? (
+              <div className="loading"><div className="spinner"></div>Loading hotels...</div>
+            ) : hotels.length === 0 ? (
+              <div className="empty-state">
+                <h3>No hotels found</h3>
+                <p>Try adjusting your search or filters</p>
+              </div>
+            ) : (
+              <div className="hotel-grid">
+                {hotels.map(hotel => (
+                  <div key={hotel.id} className="hotel-card" onClick={() => navigate(`/hotel/${hotel.id}`)}>
+                    <img src={hotel.image_url} alt={hotel.name}
+                      onError={e => { e.target.src = 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800'; }} />
+                    <div className="hotel-card-body">
+                      <h3>{hotel.name}</h3>
+                      <div className="hotel-location">
+                        <span>📍</span> {hotel.location}
+                      </div>
+                      <div className="hotel-rating">★ {hotel.rating}</div>
+                      <div className="hotel-price">
+                        ₹{Number(hotel.min_price).toLocaleString()} <span>/ night onwards</span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      );
+    }
+
+    // Hotel Detail
+    function HotelDetailPage({ navigate, hotelId }) {
+      const { user } = useAuth();
+      const [hotel, setHotel] = useState(null);
+      const [loading, setLoading] = useState(true);
+
+      useEffect(() => {
+        api(`/api/hotels/${hotelId}`)
+          .then(data => setHotel(data))
+          .catch(err => console.error(err))
+          .finally(() => setLoading(false));
+      }, [hotelId]);
+
+      if (loading) return <div className="loading"><div className="spinner"></div>Loading hotel details...</div>;
+      if (!hotel) return <div className="empty-state"><h3>Hotel not found</h3></div>;
+
+      return (
+        <div className="container">
+          <div className="hotel-detail">
+            <button className="back-btn" onClick={() => navigate('/')}>← Back to Hotels</button>
+            <img className="hotel-detail-img" src={hotel.image_url} alt={hotel.name}
+              onError={e => { e.target.src = 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800'; }} />
+            <h1>{hotel.name}</h1>
+            <div className="meta">📍 {hotel.location} &nbsp;|&nbsp; ★ {hotel.rating}</div>
+            <p className="description">{hotel.description}</p>
+
+            <h2 style={{ marginBottom: 16 }}>Available Rooms</h2>
+            {hotel.rooms && hotel.rooms.length > 0 ? hotel.rooms.map(room => (
+              <div key={room.id} className="room-card">
+                <div className="room-info">
+                  <h3>{room.room_type}</h3>
+                  <p>Capacity: {room.capacity} guests &nbsp;|&nbsp; {room.total_rooms} rooms available</p>
+                  <div className="room-meta">
+                    {room.amenities && room.amenities.split(',').map((a, i) => (
+                      <span key={i}>{a.trim()}</span>
+                    ))}
+                  </div>
+                </div>
+                <div className="room-action">
+                  <div className="price">₹{Number(room.price).toLocaleString()}</div>
+                  <div className="price-sub">per night</div>
+                  <button onClick={() => {
+                    if (!user) { navigate('/login'); return; }
+                    navigate(`/book/${hotel.id}/${room.id}`);
+                  }}>Book Now</button>
+                </div>
+              </div>
+            )) : (
+              <div className="empty-state"><p>No rooms available</p></div>
+            )}
+          </div>
+        </div>
+      );
+    }
+
+    // Booking Form
+    function BookingPage({ navigate, hotelId, roomId }) {
+      const { user } = useAuth();
+      const [room, setRoom] = useState(null);
+      const [hotel, setHotel] = useState(null);
+      const [form, setForm] = useState({
+        check_in: '',
+        check_out: '',
+        guests: 1,
+      });
+      const [error, setError] = useState('');
+      const [loading, setLoading] = useState(true);
+      const [submitting, setSubmitting] = useState(false);
+
+      useEffect(() => {
+        if (!user) { navigate('/login'); return; }
+        api(`/api/hotels/${hotelId}`)
+          .then(data => {
+            setHotel(data);
+            const found = data.rooms.find(r => r.id === parseInt(roomId));
+            setRoom(found);
+          })
+          .catch(err => console.error(err))
+          .finally(() => setLoading(false));
+      }, [hotelId, roomId]);
+
+      const nights = form.check_in && form.check_out
+        ? Math.max(1, Math.ceil((new Date(form.check_out) - new Date(form.check_in)) / (1000*60*60*24)))
+        : 0;
+      const total = room ? nights * parseFloat(room.price) : 0;
+
+      const handleSubmit = async (e) => {
+        e.preventDefault();
+        setError('');
+        setSubmitting(true);
+        try {
+          const booking = await api('/api/bookings', {
+            method: 'POST',
+            body: JSON.stringify({
+              room_id: parseInt(roomId),
+              hotel_id: parseInt(hotelId),
+              check_in: form.check_in,
+              check_out: form.check_out,
+              guests: form.guests,
+            }),
+          });
+          navigate(`/confirmation/${booking.id}`);
+        } catch (err) {
+          setError(err.message);
+        } finally {
+          setSubmitting(false);
+        }
+      };
+
+      if (loading) return <div className="loading"><div className="spinner"></div>Loading...</div>;
+      if (!room || !hotel) return <div className="empty-state"><h3>Room not found</h3></div>;
+
+      const today = new Date().toISOString().split('T')[0];
+
+      return (
+        <div className="container">
+          <div className="booking-form">
+            <button className="back-btn" onClick={() => navigate(`/hotel/${hotelId}`)}>← Back to Hotel</button>
+            <h2>Book Your Stay</h2>
+            <p style={{ color: '#6b7280', marginBottom: 20 }}>
+              {hotel.name} — {room.room_type} Room
+            </p>
+            {error && <div className="error-msg">{error}</div>}
+            <form onSubmit={handleSubmit}>
+              <div className="date-row">
+                <div className="form-group">
+                  <label>Check-in</label>
+                  <input type="date" min={today} value={form.check_in}
+                    onChange={e => setForm({...form, check_in: e.target.value})} required />
+                </div>
+                <div className="form-group">
+                  <label>Check-out</label>
+                  <input type="date" min={form.check_in || today} value={form.check_out}
+                    onChange={e => setForm({...form, check_out: e.target.value})} required />
+                </div>
+              </div>
+              <div className="form-group">
+                <label>Number of Guests</label>
+                <input type="number" min="1" max={room.capacity} value={form.guests}
+                  onChange={e => setForm({...form, guests: parseInt(e.target.value)})} required />
+              </div>
+              {nights > 0 && (
+                <div style={{ background: '#f9fafb', padding: 16, borderRadius: 10, margin: '16px 0' }}>
+                  <p style={{ fontSize: 14, color: '#6b7280' }}>
+                    ₹{Number(room.price).toLocaleString()} × {nights} night{nights > 1 ? 's' : ''}
+                  </p>
+                  <p style={{ fontSize: 22, fontWeight: 700, color: '#2563eb', marginTop: 4 }}>
+                    Total: ₹{total.toLocaleString()}
+                  </p>
+                </div>
+              )}
+              <button type="submit" className="form-submit" disabled={submitting}>
+                {submitting ? 'Booking...' : 'Confirm Booking'}
+              </button>
+            </form>
+          </div>
+        </div>
+      );
+    }
+
+    // Booking Confirmation
+    function ConfirmationPage({ navigate, bookingId }) {
+      const [booking, setBooking] = useState(null);
+      const [loading, setLoading] = useState(true);
+
+      useEffect(() => {
+        api('/api/bookings/my')
+          .then(data => {
+            const found = data.find(b => b.id === parseInt(bookingId));
+            setBooking(found);
+          })
+          .catch(err => console.error(err))
+          .finally(() => setLoading(false));
+      }, [bookingId]);
+
+      if (loading) return <div className="loading"><div className="spinner"></div>Loading...</div>;
+      if (!booking) return <div className="empty-state"><h3>Booking not found</h3></div>;
+
+      return (
+        <div className="container">
+          <div className="confirmation">
+            <div className="checkmark">✓</div>
+            <h2>Booking Confirmed!</h2>
+            <p style={{ color: '#6b7280' }}>Your reservation has been successfully made.</p>
+            <div className="details">
+              <p><strong>Booking ID:</strong> #{booking.id}</p>
+              <p><strong>Hotel:</strong> {booking.hotel_name}</p>
+              <p><strong>Location:</strong> {booking.hotel_location}</p>
+              <p><strong>Room Type:</strong> {booking.room_type}</p>
+              <p><strong>Check-in:</strong> {new Date(booking.check_in).toLocaleDateString()}</p>
+              <p><strong>Check-out:</strong> {new Date(booking.check_out).toLocaleDateString()}</p>
+              <p><strong>Guests:</strong> {booking.guests}</p>
+              <p><strong>Total Price:</strong> ₹{Number(booking.total_price).toLocaleString()}</p>
+              <p><strong>Status:</strong> <span className="booking-status status-confirmed">{booking.status}</span></p>
+            </div>
+            <div style={{ display: 'flex', gap: 12, justifyContent: 'center', marginTop: 24 }}>
+              <button className="btn-primary" style={{ padding: '12px 24px', borderRadius: 10, border: 'none', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}
+                onClick={() => navigate('/my-bookings')}>View My Bookings</button>
+              <button className="btn-outline" style={{ padding: '12px 24px', borderRadius: 10, fontSize: 14, fontWeight: 600, cursor: 'pointer' }}
+                onClick={() => navigate('/')}>Browse Hotels</button>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // My Bookings
+    function MyBookingsPage({ navigate }) {
+      const { user } = useAuth();
+      const [bookings, setBookings] = useState([]);
+      const [loading, setLoading] = useState(true);
+
+      useEffect(() => {
+        if (!user) { navigate('/login'); return; }
+        api('/api/bookings/my')
+          .then(data => setBookings(data))
+          .catch(err => console.error(err))
+          .finally(() => setLoading(false));
+      }, []);
+
+      if (loading) return <div className="loading"><div className="spinner"></div>Loading bookings...</div>;
+
+      return (
+        <div className="container">
+          <h1 className="page-title">My Bookings</h1>
+          <div className="booking-list">
+            {bookings.length === 0 ? (
+              <div className="empty-state">
+                <h3>No bookings yet</h3>
+                <p>Start exploring hotels and make your first booking!</p>
+                <button className="btn-primary" style={{ marginTop: 16, padding: '12px 24px', border: 'none', borderRadius: 10, fontSize: 14, fontWeight: 600, cursor: 'pointer' }}
+                  onClick={() => navigate('/')}>Browse Hotels</button>
+              </div>
+            ) : (
+              bookings.map(b => (
+                <div key={b.id} className="booking-item">
+                  <img src={b.image_url} alt={b.hotel_name}
+                    onError={e => { e.target.src = 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800'; }} />
+                  <div className="booking-item-info">
+                    <h3>{b.hotel_name}</h3>
+                    <p>📍 {b.hotel_location}</p>
+                    <p>{b.room_type} Room</p>
+                    <p>{new Date(b.check_in).toLocaleDateString()} → {new Date(b.check_out).toLocaleDateString()}</p>
+                    <p>{b.guests} guest{b.guests > 1 ? 's' : ''}</p>
+                    <span className={`booking-status status-${b.status}`}>{b.status}</span>
+                  </div>
+                  <div className="booking-total">₹{Number(b.total_price).toLocaleString()}</div>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+      );
+    }
+
+    // ---- App ----
+    function App() {
+      const { path, navigate } = useRouter();
+      const { loading } = useAuth();
+
+      if (loading) return <div className="loading"><div className="spinner"></div>Loading...</div>;
+
+      // Route matching
+      let page;
+      if (path === '/login') {
+        page = <LoginPage navigate={navigate} />;
+      } else if (path === '/register') {
+        page = <RegisterPage navigate={navigate} />;
+      } else if (path === '/my-bookings') {
+        page = <MyBookingsPage navigate={navigate} />;
+      } else if (path.startsWith('/hotel/')) {
+        const hotelId = path.split('/')[2];
+        page = <HotelDetailPage navigate={navigate} hotelId={hotelId} />;
+      } else if (path.startsWith('/book/')) {
+        const parts = path.split('/');
+        page = <BookingPage navigate={navigate} hotelId={parts[2]} roomId={parts[3]} />;
+      } else if (path.startsWith('/confirmation/')) {
+        const bookingId = path.split('/')[2];
+        page = <ConfirmationPage navigate={navigate} bookingId={bookingId} />;
+      } else {
+        page = <HomePage navigate={navigate} />;
+      }
+
+      return (
+        <div>
+          <Navbar navigate={navigate} />
+          {page}
+        </div>
+      );
+    }
+
+    // ---- Mount ----
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(
+      <AuthProvider>
+        <App />
+      </AuthProvider>
+    );
+  </script>
+</body>
+</html>
