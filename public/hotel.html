@@ -61,10 +61,14 @@
       }
 
       try {
-        const params = new URLSearchParams({ roomId, checkIn, checkOut, roomsBooked: Number(roomsBooked) });
-        const booking = await hotelBooking.api.request(`/api/bookings?${params}`, {
+        const booking = await hotelBooking.api.request('/api/bookings', {
           method: 'POST',
-          body: JSON.stringify({ roomId, checkIn, checkOut, roomsBooked: Number(roomsBooked) })
+          body: JSON.stringify({
+            room_id: roomId,
+            check_in: checkIn,
+            check_out: checkOut,
+            guests: Number(roomsBooked)
+          })
         });
         sessionStorage.setItem('latestBooking', JSON.stringify(booking));
         window.location.href = './booking-confirmation.html';
