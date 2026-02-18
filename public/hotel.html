@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Hotel Detail - Hotel Booking</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous" />
+  <link rel="stylesheet" href="./css/styles.css" />
+</head>
+<body>
+  <nav class="navbar navbar-expand-lg navbar-dark topbar sticky-top">
+    <div class="container">
+      <a class="navbar-brand fw-bold" href="./hotels.html">Hotel Booking</a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav" aria-controls="mainNav" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="mainNav">
+        <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
+          <li class="nav-item"><a class="nav-link" href="./hotels.html">Hotels</a></li>
+          <li class="nav-item"><a class="nav-link" href="./my-bookings.html">My Bookings</a></li>
+          <li class="nav-item"><a class="nav-link" href="#" onclick="hotelBooking.logout()">Logout</a></li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <main class="container py-4 py-md-5">
+    <section id="hotelDetail" class="card border-0 shadow-sm mb-4"></section>
+    <section id="roomList" class="row g-3"></section>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+  <script src="./js/common.js"></script>
+  <script>
+    hotelBooking.ensureAuth();
+
+    const query = new URLSearchParams(window.location.search);
+    const hotelId = query.get('id');
+
+    async function bookRoom(roomId) {
+      const checkIn = document.getElementById(`checkin-${roomId}`).value;
+      const checkOut = document.getElementById(`checkout-${roomId}`).value;
+      const roomsBooked = document.getElementById(`rooms-${roomId}`).value || 1;
+      const statusEl = document.getElementById(`status-${roomId}`);
+      statusEl.textContent = '';
+
+      try {
+        const booking = await hotelBooking.api.request('/api/bookings', {
+          method: 'POST',
+          body: JSON.stringify({ roomId, checkIn, checkOut, roomsBooked: Number(roomsBooked) })
+        });
+        sessionStorage.setItem('latestBooking', JSON.stringify(booking));
+        window.location.href = './booking-confirmation.html';
+      } catch (error) {
+        statusEl.textContent = error.message;
+      }
+    }
+
+    async function loadHotel() {
+      if (!hotelId) {
+        document.getElementById('hotelDetail').innerHTML = '<div class="card-body"><p class="text-danger mb-0">Missing hotel ID</p></div>';
+        return;
+      }
+
+      const data = await hotelBooking.api.request(`/api/hotels/${hotelId}`);
+      const hotel = data.hotel;
+
+      document.getElementById('hotelDetail').innerHTML = `
+        <div class="card-body p-4">
+          <h1 class="h3 mb-2">${hotel.name}</h1>
+          <p class="text-secondary mb-1">${hotel.location}</p>
+          <p class="text-secondary mb-0">${hotel.description || ''}</p>
+        </div>
+      `;
+
+      const rooms = hotel.rooms || [];
+      const roomsHtml = rooms.map((room) => {
+        const activeBookings = (room.bookings || []).length;
+        const availableStatus = room.available ? 'Yes' : 'No';
+
+        return `
+        <div class="col-12">
+          <article class="card border-0 shadow-sm">
+            <div class="card-body p-4">
+              <h2 class="h5 mb-3">${room.room_type}</h2>
+              <p class="mb-1">Price: INR ${parseFloat(room.price_per_night).toLocaleString()} / night</p>
+              <p class="text-secondary mb-1">Capacity: ${room.capacity} guest(s)</p>
+              <p class="text-secondary mb-3">Available: <span class="badge ${room.available ? 'bg-success' : 'bg-danger'}">${availableStatus}</span></p>
+              <div class="row g-3">
+                <div class="col-12 col-md-4">
+                  <label for="checkin-${room.id}" class="form-label">Check-in</label>
+                  <input id="checkin-${room.id}" type="date" class="form-control" required />
+                </div>
+                <div class="col-12 col-md-4">
+                  <label for="checkout-${room.id}" class="form-label">Check-out</label>
+                  <input id="checkout-${room.id}" type="date" class="form-control" required />
+                </div>
+                <div class="col-12 col-md-4">
+                  <label for="rooms-${room.id}" class="form-label">Rooms</label>
+                  <input id="rooms-${room.id}" type="number" min="1" value="1" class="form-control" />
+                </div>
+              </div>
+              <div class="d-grid d-md-inline-block mt-3">
+                <button class="btn btn-primary" onclick="bookRoom(${room.id})" ${!room.available ? 'disabled' : ''}>Book Room</button>
+              </div>
+              <p id="status-${room.id}" class="text-danger small mt-2 mb-0"></p>
+            </div>
+          </article>
+        </div>`;
+      }).join('');
+
+      document.getElementById('roomList').innerHTML = roomsHtml || '<div class="col-12"><p class="text-secondary">No rooms available for this hotel.</p></div>';
+    }
+
+    loadHotel().catch((error) => {
+      document.getElementById('hotelDetail').innerHTML = `<div class="card-body"><p class="text-danger mb-0">${error.message}</p></div>`;
+    });
+  </script>
+</body>
+</html>

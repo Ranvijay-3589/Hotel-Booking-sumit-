@@ -1,0 +1,266 @@
+.detail-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px 40px;
+}
+
+.detail-hero {
+  height: 400px;
+  border-radius: 0 0 16px 16px;
+  overflow: hidden;
+  margin-bottom: 32px;
+}
+
+.detail-hero img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.detail-content {
+  display: grid;
+  grid-template-columns: 1fr 360px;
+  gap: 32px;
+}
+
+.detail-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 20px;
+}
+
+.detail-header h1 {
+  font-size: 2rem;
+  color: #111827;
+}
+
+.detail-location {
+  color: #6b7280;
+  font-size: 1.1rem;
+  margin-top: 4px;
+}
+
+.detail-rating {
+  background: #2563eb;
+  color: #ffffff;
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 1.2rem;
+}
+
+.detail-description {
+  color: #4b5563;
+  font-size: 1rem;
+  line-height: 1.7;
+  margin-bottom: 24px;
+}
+
+.detail-amenities {
+  margin-bottom: 32px;
+}
+
+.detail-amenities h3 {
+  font-size: 1.25rem;
+  color: #111827;
+  margin-bottom: 12px;
+}
+
+.amenity-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.amenity-tag {
+  background: #eff6ff;
+  color: #1e40af;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.detail-rooms h3 {
+  font-size: 1.25rem;
+  color: #111827;
+  margin-bottom: 16px;
+}
+
+.room-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.room-card {
+  background: #ffffff;
+  border: 2px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 20px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.room-card:hover {
+  border-color: #93c5fd;
+}
+
+.room-card.selected {
+  border-color: #2563eb;
+  background: #eff6ff;
+}
+
+.room-card.unavailable {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.room-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.room-header h4 {
+  font-size: 1.1rem;
+  color: #111827;
+}
+
+.room-status {
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.room-status.available {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.room-status.booked {
+  background: #fef2f2;
+  color: #dc2626;
+}
+
+.room-description {
+  color: #6b7280;
+  font-size: 0.9rem;
+  margin-bottom: 12px;
+}
+
+.room-details {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: #4b5563;
+  font-size: 0.9rem;
+}
+
+.room-price {
+  font-weight: 700;
+  color: #2563eb;
+  font-size: 1.1rem;
+}
+
+/* Sidebar */
+.booking-card {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
+  position: sticky;
+  top: 88px;
+}
+
+.booking-card h3 {
+  font-size: 1.25rem;
+  color: #111827;
+  margin-bottom: 16px;
+}
+
+.booking-error {
+  background: #fef2f2;
+  color: #dc2626;
+  padding: 10px 14px;
+  border-radius: 8px;
+  margin-bottom: 12px;
+  font-size: 0.9rem;
+  border: 1px solid #fecaca;
+}
+
+.booking-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.booking-form .form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.booking-form label {
+  font-weight: 600;
+  font-size: 0.85rem;
+  color: #374151;
+}
+
+.booking-form select,
+.booking-form input[type="date"] {
+  padding: 10px 14px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  background: #ffffff;
+}
+
+.booking-form select:focus,
+.booking-form input[type="date"]:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.booking-summary {
+  background: #f3f4f6;
+  padding: 12px 16px;
+  border-radius: 8px;
+  text-align: center;
+}
+
+.booking-summary strong {
+  color: #2563eb;
+}
+
+.book-btn {
+  background-color: #2563eb;
+  color: #ffffff;
+  padding: 12px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 1rem;
+  transition: background-color 0.2s;
+}
+
+.book-btn:hover {
+  background-color: #1d4ed8;
+}
+
+.book-btn:disabled {
+  background-color: #93c5fd;
+  cursor: not-allowed;
+}
+
+@media (max-width: 768px) {
+  .detail-content {
+    grid-template-columns: 1fr;
+  }
+
+  .detail-hero {
+    height: 250px;
+  }
+}
