@@ -239,4 +239,60 @@ router.patch('/:id', auth, handleUpdateBooking);
 // POST /api/bookings/update/:id - fallback for proxies that don't forward PUT/PATCH
 router.post('/update/:id', auth, handleUpdateBooking);
 
+// DELETE /api/bookings/:id - delete a booking
+router.delete('/:id', auth, async (req, res) => {
+  try {
+    const bookingId = req.params.id;
+    const user_id = req.user.id;
+
+    // Verify the booking exists and belongs to this user
+    const existing = await pool.query(
+      'SELECT * FROM bookings WHERE id = $1 AND user_id = $2',
+      [bookingId, user_id]
+    );
+
+    if (existing.rows.length === 0) {
+      return res.status(404).json({ message: 'Booking not found' });
+    }
+
+    // Delete the booking
+    await pool.query(
+      'DELETE FROM bookings WHERE id = $1 AND user_id = $2',
+      [bookingId, user_id]
+    );
+
+    res.json({ message: 'Booking deleted successfully' });
+  } catch (err) {
+    console.error('Delete booking error:', err.message);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// POST /api/bookings/delete/:id - fallback for proxies that don't forward DELETE
+router.post('/delete/:id', auth, async (req, res) => {
+  try {
+    const bookingId = req.params.id;
+    const user_id = req.user.id;
+
+    const existing = await pool.query(
+      'SELECT * FROM bookings WHERE id = $1 AND user_id = $2',
+      [bookingId, user_id]
+    );
+
+    if (existing.rows.length === 0) {
+      return res.status(404).json({ message: 'Booking not found' });
+    }
+
+    await pool.query(
+      'DELETE FROM bookings WHERE id = $1 AND user_id = $2',
+      [bookingId, user_id]
+    );
+
+    res.json({ message: 'Booking deleted successfully' });
+  } catch (err) {
+    console.error('Delete booking error:', err.message);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 module.exports = router;
