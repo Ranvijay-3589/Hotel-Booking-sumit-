@@ -43,7 +43,7 @@ async function setup() {
         check_out DATE NOT NULL,
         guests INTEGER DEFAULT 1,
         total_price NUMERIC(10,2) NOT NULL,
-        status VARCHAR(50) DEFAULT 'confirmed',
+        status VARCHAR(50) DEFAULT 'requested',
         created_at TIMESTAMP DEFAULT NOW()
       );
     `);
