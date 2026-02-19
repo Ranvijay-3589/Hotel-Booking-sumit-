@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hotel Booking</title>
+  <base href="/sumit/">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- Navbar -->
+  <nav class="navbar">
+    <a class="navbar-brand" data-page="search">&#127976; Hotel Booking</a>
+    <div class="navbar-nav">
+      <a class="nav-link" data-page="search">Search</a>
+      <span id="nav-guest">
+        <a class="nav-link" data-page="login">Login</a>
+        <a class="nav-link" data-page="register">Register</a>
+      </span>
+      <span id="nav-user" class="hidden">
+        <a class="nav-link" data-page="bookings">My Bookings</a>
+        <span class="nav-link" style="color:var(--gray-400);cursor:default">Hi, <span id="nav-username"></span></span>
+        <a class="nav-link" data-page="logout" style="color:var(--danger)">Logout</a>
+      </span>
+    </div>
+  </nav>
+
+  <!-- ============================================================ -->
+  <!-- Register Page -->
+  <!-- ============================================================ -->
+  <div id="page-register" class="page">
+    <div class="container-sm">
+      <div class="form-card">
+        <h2>Create Account</h2>
+        <p class="subtitle">Join us to start booking hotels</p>
+        <div id="register-error" class="alert alert-error hidden"></div>
+        <form onsubmit="App.handleRegister(event)">
+          <div class="form-group">
+            <label for="reg-name">Full Name</label>
+            <input type="text" id="reg-name" class="form-control" placeholder="John Doe" required>
+          </div>
+          <div class="form-group">
+            <label for="reg-email">Email</label>
+            <input type="email" id="reg-email" class="form-control" placeholder="john@example.com" required>
+          </div>
+          <div class="form-group">
+            <label for="reg-password">Password</label>
+            <input type="password" id="reg-password" class="form-control" placeholder="Min 6 characters" minlength="6" required>
+          </div>
+          <div class="form-group">
+            <label for="reg-confirm">Confirm Password</label>
+            <input type="password" id="reg-confirm" class="form-control" placeholder="Confirm password" minlength="6" required>
+          </div>
+          <button type="submit" class="btn btn-primary btn-block">Create Account</button>
+        </form>
+        <p class="text-center mt-16">Already have an account? <a data-page="login" href="#">Sign in</a></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- Login Page -->
+  <!-- ============================================================ -->
+  <div id="page-login" class="page">
+    <div class="container-sm">
+      <div class="form-card">
+        <h2>Welcome Back</h2>
+        <p class="subtitle">Sign in to your account</p>
+        <div id="login-error" class="alert alert-error hidden"></div>
+        <form onsubmit="App.handleLogin(event)">
+          <div class="form-group">
+            <label for="login-email">Email</label>
+            <input type="email" id="login-email" class="form-control" placeholder="john@example.com" required>
+          </div>
+          <div class="form-group">
+            <label for="login-password">Password</label>
+            <input type="password" id="login-password" class="form-control" placeholder="Your password" required>
+          </div>
+          <button type="submit" class="btn btn-primary btn-block">Sign In</button>
+        </form>
+        <p class="text-center mt-16">Don't have an account? <a data-page="register" href="#">Register</a></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- Hotel Search Page -->
+  <!-- ============================================================ -->
+  <div id="page-search" class="page active">
+    <div class="container">
+      <div class="hero">
+        <h1>Find Your Perfect Stay</h1>
+        <p>Search hundreds of hotels and find the best deals for your next trip</p>
+        <form class="search-bar" onsubmit="App.handleSearch(event)">
+          <div class="form-group">
+            <label for="search-location">Location</label>
+            <input type="text" id="search-location" class="form-control" placeholder="City or destination">
+          </div>
+          <div class="form-group">
+            <label for="search-min-price">Min Price</label>
+            <input type="number" id="search-min-price" class="form-control" placeholder="$0" min="0">
+          </div>
+          <div class="form-group">
+            <label for="search-max-price">Max Price</label>
+            <input type="number" id="search-max-price" class="form-control" placeholder="$1000" min="0">
+          </div>
+          <button type="submit" class="btn btn-primary" style="height:42px">Search</button>
+        </form>
+      </div>
+
+      <div class="section-header">
+        <h2>Hotels</h2>
+      </div>
+      <div id="hotel-grid" class="hotel-grid">
+        <div class="loading-state" style="grid-column:1/-1"><div class="spinner"></div><p style="margin-top:12px">Loading hotels...</p></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- Hotel Detail Page (dynamically populated) -->
+  <!-- ============================================================ -->
+  <div id="page-hotel-detail" class="page">
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- Booking Confirmation Page (dynamically populated) -->
+  <!-- ============================================================ -->
+  <div id="page-booking-confirm" class="page">
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- My Bookings Page -->
+  <!-- ============================================================ -->
+  <div id="page-bookings" class="page">
+    <div class="container">
+      <div class="section-header">
+        <h2>My Bookings</h2>
+        <button class="btn btn-primary btn-sm" onclick="App.navigate('search')">+ New Booking</button>
+      </div>
+      <div id="bookings-list"></div>
+    </div>
+  </div>
+
+  <script src="js/app.js"></script>
+</body>
+</html>
