@@ -29,6 +29,12 @@ router.post('/', async (req, res) => {
       return res.status(400).json({ error: 'check_in cannot be in the past.', message: 'check_in cannot be in the past.' });
     }
 
+    // Verify the user still exists in the database
+    const userResult = await pool.query('SELECT id FROM users WHERE id = $1', [user_id]);
+    if (userResult.rows.length === 0) {
+      return res.status(401).json({ error: 'User not found. Please login again.', message: 'User not found. Please login again.' });
+    }
+
     // Look up the room — if hotel_id not provided, get it from the room record
     let roomResult;
     if (hotel_id) {
@@ -60,7 +66,7 @@ router.post('/', async (req, res) => {
 
     // Calculate total price
     const nights = Math.ceil((new Date(check_out) - new Date(check_in)) / (1000 * 60 * 60 * 24));
-    const price = parseFloat(room.price);
+    const price = parseFloat(room.price) || 0;
     const total_price = (nights * price * rooms_booked).toFixed(2);
 
     const result = await pool.query(`
@@ -74,16 +80,18 @@ router.post('/', async (req, res) => {
     const hotelResult = await pool.query('SELECT name, location FROM hotels WHERE id = $1', [hotel_id]);
     const roomDetail = await pool.query('SELECT room_type, price FROM rooms WHERE id = $1', [room_id]);
 
-    const roomPrice = parseFloat(roomDetail.rows[0].price);
+    const hotelInfo = hotelResult.rows[0] || {};
+    const roomInfo = roomDetail.rows[0] || {};
+    const roomPrice = parseFloat(roomInfo.price) || 0;
 
     res.status(201).json({
       message: 'Booking requested!',
       id: booking.id,
       room_id: booking.room_id,
       hotel_id: booking.hotel_id,
-      hotel_name: hotelResult.rows[0].name,
-      hotel_location: hotelResult.rows[0].location,
-      room_type: roomDetail.rows[0].room_type,
+      hotel_name: hotelInfo.name || '',
+      hotel_location: hotelInfo.location || '',
+      room_type: roomInfo.room_type || '',
       check_in: booking.check_in,
       check_out: booking.check_out,
       rooms_booked: rooms_booked,
@@ -93,16 +101,23 @@ router.post('/', async (req, res) => {
       nights,
       booking: {
         ...booking,
-        hotel_name: hotelResult.rows[0].name,
-        hotel_location: hotelResult.rows[0].location,
-        room_type: roomDetail.rows[0].room_type,
+        hotel_name: hotelInfo.name || '',
+        hotel_location: hotelInfo.location || '',
+        room_type: roomInfo.room_type || '',
         price_per_night: roomPrice,
         nights
       }
     });
   } catch (err) {
     console.error('Create booking error:', err);
-    res.status(500).json({ error: 'Server error.', message: 'Server error.' });
+    // Return specific error messages based on the error type
+    if (err.code === '23503') {
+      return res.status(400).json({ error: 'Invalid reference. Please login again and retry.', message: 'Invalid reference. Please login again and retry.' });
+    }
+    if (err.code === '23505') {
+      return res.status(409).json({ error: 'Duplicate booking detected.', message: 'Duplicate booking detected.' });
+    }
+    res.status(500).json({ error: 'Server error.', message: 'Failed to create booking. Please try again.' });
   }
 });
 

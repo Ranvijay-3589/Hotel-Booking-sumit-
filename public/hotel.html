@@ -115,7 +115,12 @@
         sessionStorage.setItem('latestBooking', JSON.stringify(bookingToStore));
         window.location.href = './booking-confirmation.html';
       } catch (error) {
-        statusEl.textContent = error.message;
+        if (error.status === 401) {
+          localStorage.removeItem('token');
+          window.location.href = './login.html';
+          return;
+        }
+        statusEl.textContent = error.message || 'Booking failed. Please try again.';
       }
     }
 
