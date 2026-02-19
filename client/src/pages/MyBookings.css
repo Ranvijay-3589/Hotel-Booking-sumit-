@@ -1,0 +1,125 @@
+.bookings-container {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 32px 20px;
+}
+
+.bookings-container h1 {
+  font-size: 1.75rem;
+  color: #111827;
+  margin-bottom: 24px;
+}
+
+.no-bookings {
+  text-align: center;
+  padding: 60px 20px;
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.no-bookings h3 {
+  color: #374151;
+  margin-bottom: 8px;
+}
+
+.no-bookings p {
+  color: #6b7280;
+  margin-bottom: 20px;
+}
+
+.browse-btn {
+  display: inline-block;
+  background: #2563eb;
+  color: #ffffff;
+  padding: 12px 32px;
+  border-radius: 8px;
+  font-weight: 600;
+  transition: background-color 0.2s;
+}
+
+.browse-btn:hover {
+  background: #1d4ed8;
+}
+
+.bookings-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.booking-item {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.booking-hotel {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.booking-hotel h3 {
+  font-size: 1.2rem;
+  color: #111827;
+}
+
+.booking-hotel h3 a {
+  color: #2563eb;
+}
+
+.booking-hotel h3 a:hover {
+  text-decoration: underline;
+}
+
+.booking-status {
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.status-confirmed {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.status-cancelled {
+  background: #fef2f2;
+  color: #dc2626;
+}
+
+.status-completed {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.booking-info {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 12px;
+}
+
+.info-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.info-label {
+  font-size: 0.8rem;
+  color: #6b7280;
+  font-weight: 500;
+}
+
+.booking-total {
+  font-weight: 700;
+  color: #2563eb;
+  font-size: 1.1rem;
+}
