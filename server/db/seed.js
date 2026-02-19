@@ -38,7 +38,7 @@ async function seed() {
 
       for (const rt of roomTypes) {
         const price = Math.round(rt.priceBase * multiplier);
-        const available = Math.max(1, rt.total - Math.floor(Math.random() * 3));
+        const available = rt.total;
         const amenities = rt.type === 'Suite'
           ? 'WiFi, AC, TV, Mini Bar, Jacuzzi, Living Area'
           : rt.type === 'Deluxe Room'

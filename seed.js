@@ -96,8 +96,8 @@ async function seed() {
       for (const rt of roomTypes) {
         const adjustedPrice = Math.round(rt.price * multiplier);
         await pool.query(
-          'INSERT INTO rooms (hotel_id, room_type, price, capacity, total_rooms, amenities) VALUES ($1, $2, $3, $4, $5, $6)',
-          [hotelId, rt.room_type, adjustedPrice, rt.capacity, rt.total_rooms, rt.amenities]
+          'INSERT INTO rooms (hotel_id, room_type, price, capacity, total_rooms, available_rooms, amenities) VALUES ($1, $2, $3, $4, $5, $6, $7)',
+          [hotelId, rt.room_type, adjustedPrice, rt.capacity, rt.total_rooms, rt.total_rooms, rt.amenities]
         );
         roomCount++;
       }

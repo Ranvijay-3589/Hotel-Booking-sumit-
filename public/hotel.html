@@ -143,7 +143,11 @@
 
       const roomsHtml = rooms.map((room) => {
         const price = parseFloat(room.price_per_night || room.price);
-        const availableStatus = room.available ? 'Yes' : 'No';
+        // Determine availability: check available_rooms (integer) first, then available (boolean), default to true
+        const isAvailable = room.available_rooms != null ? room.available_rooms > 0
+          : room.available != null ? !!room.available
+          : true;
+        const availableStatus = isAvailable ? 'Yes' : 'No';
 
         return `
         <div class="col-12">
@@ -152,7 +156,7 @@
               <h2 class="h5 mb-3">${room.room_type}</h2>
               <p class="mb-1">Price: INR ${price.toLocaleString()} / night</p>
               <p class="text-secondary mb-1">Capacity: ${room.capacity} guest(s)</p>
-              <p class="text-secondary mb-3">Available: <span class="badge ${room.available ? 'bg-success' : 'bg-danger'}">${availableStatus}</span></p>
+              <p class="text-secondary mb-3">Available: <span class="badge ${isAvailable ? 'bg-success' : 'bg-danger'}">${availableStatus}</span></p>
               <div class="row g-3">
                 <div class="col-12 col-md-4">
                   <label for="checkin-${room.id}" class="form-label">Check-in</label>
@@ -168,7 +172,7 @@
                 </div>
               </div>
               <div class="d-grid d-md-inline-block mt-3">
-                <button class="btn btn-primary" onclick="bookRoom(${room.id})" ${!room.available ? 'disabled' : ''}>Book Room</button>
+                <button class="btn btn-primary" onclick="bookRoom(${room.id})" ${!isAvailable ? 'disabled' : ''}>Book Room</button>
               </div>
               <p id="status-${room.id}" class="text-danger small mt-2 mb-0"></p>
             </div>

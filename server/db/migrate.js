@@ -42,6 +42,7 @@ const migrate = async () => {
         price NUMERIC(10,2) NOT NULL,
         capacity INTEGER DEFAULT 2,
         total_rooms INTEGER DEFAULT 1,
+        available_rooms INTEGER DEFAULT 1,
         amenities TEXT,
         created_at TIMESTAMP NOT NULL DEFAULT NOW()
       );
