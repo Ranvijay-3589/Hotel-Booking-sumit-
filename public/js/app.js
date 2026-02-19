@@ -402,7 +402,7 @@ const App = {
       return;
     }
 
-    if (!confirm('Confirm this booking?')) return;
+    if (!confirm('Submit this booking request?')) return;
 
     try {
       const data = await this.api('/api/bookings', {
@@ -436,8 +436,8 @@ const App = {
     page.innerHTML = `
       <div class="container">
         <div class="booking-summary">
-          <h2>Booking Confirmed!</h2>
-          <p class="text-center" style="color:var(--gray-500);margin-bottom:24px">Your reservation has been successfully made.</p>
+          <h2>Booking Requested!</h2>
+          <p class="text-center" style="color:var(--gray-500);margin-bottom:24px">Your booking request has been submitted. Go to My Bookings to confirm it.</p>
 
           <div class="summary-row">
             <span class="summary-label">Booking ID</span>
@@ -511,7 +511,13 @@ const App = {
         const checkIn = new Date(b.check_in).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
         const checkOut = new Date(b.check_out).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
         const isConfirmed = b.status === 'confirmed';
+        const isRequested = b.status === 'requested';
+        const isCancelled = b.status === 'cancelled';
         const isFuture = new Date(b.check_in) >= new Date(new Date().toDateString());
+
+        let badgeClass = 'badge-danger';
+        if (isConfirmed) badgeClass = 'badge-success';
+        else if (isRequested) badgeClass = 'badge-warning';
 
         return `
           <div class="booking-list-item">
@@ -521,17 +527,32 @@ const App = {
               <p>${this.escapeHtml(b.room_type)}</p>
               <p>${checkIn} &rarr; ${checkOut}</p>
               <p>${b.guests} guest${b.guests != 1 ? 's' : ''}</p>
-              <span class="badge ${isConfirmed ? 'badge-success' : 'badge-danger'}" style="margin-top:8px">${b.status}</span>
+              <span class="badge ${badgeClass}" style="margin-top:8px">${b.status}</span>
             </div>
             <div class="booking-actions">
               <div class="total">$${parseFloat(b.total_price).toFixed(2)}</div>
-              ${isConfirmed && isFuture ? `<button class="btn btn-danger btn-sm" onclick="App.cancelBooking(${b.id})">Cancel</button>` : ''}
+              ${isRequested ? `<button class="btn btn-success btn-sm" onclick="App.confirmBooking(${b.id})">Confirm</button>` : ''}
+              ${(isConfirmed || isRequested) && isFuture ? `<button class="btn btn-danger btn-sm" onclick="App.cancelBooking(${b.id})">Cancel</button>` : ''}
             </div>
           </div>
         `;
       }).join('');
     } catch (err) {
       container.innerHTML = `<div class="empty-state"><h3>Error</h3><p>${this.escapeHtml(err.message)}</p></div>`;
+    }
+  },
+
+  async confirmBooking(bookingId) {
+    if (!confirm('Confirm this booking?')) return;
+
+    try {
+      await this.api(`/api/bookings/${bookingId}/confirm`, {
+        method: 'POST',
+        headers: this.authHeaders()
+      });
+      this.loadMyBookings();
+    } catch (err) {
+      alert(err.message);
     }
   },
 

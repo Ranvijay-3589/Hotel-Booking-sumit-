@@ -32,10 +32,10 @@ router.post('/', async (req, res) => {
 
     const room = roomResult.rows[0];
 
-    // Check availability
+    // Check availability (count both requested and confirmed bookings)
     const bookedResult = await pool.query(`
       SELECT COUNT(*) AS count FROM bookings
-      WHERE room_id = $1 AND status = 'confirmed'
+      WHERE room_id = $1 AND status IN ('confirmed', 'requested')
         AND check_in < $3 AND check_out > $2
     `, [room_id, check_in, check_out]);
 
@@ -50,7 +50,7 @@ router.post('/', async (req, res) => {
 
     const result = await pool.query(`
       INSERT INTO bookings (user_id, room_id, hotel_id, check_in, check_out, guests, total_price, status)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, 'confirmed')
+      VALUES ($1, $2, $3, $4, $5, $6, $7, 'requested')
       RETURNING *
     `, [user_id, room_id, hotel_id, check_in, check_out, guests || 1, total_price]);
 
@@ -60,7 +60,7 @@ router.post('/', async (req, res) => {
     const roomDetail = await pool.query('SELECT room_type FROM rooms WHERE id = $1', [room_id]);
 
     res.status(201).json({
-      message: 'Booking confirmed!',
+      message: 'Booking requested!',
       booking: {
         ...booking,
         hotel_name: hotelResult.rows[0].name,
@@ -97,6 +97,28 @@ router.get('/', async (req, res) => {
   }
 });
 
+// POST /api/bookings/:id/confirm — Confirm a requested booking
+router.post('/:id/confirm', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const user_id = req.user.id;
+
+    const result = await pool.query(
+      "UPDATE bookings SET status = 'confirmed' WHERE id = $1 AND user_id = $2 AND status = 'requested' RETURNING *",
+      [id, user_id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Booking not found or not in requested status.' });
+    }
+
+    res.json({ message: 'Booking confirmed.', booking: result.rows[0] });
+  } catch (err) {
+    console.error('Confirm booking error:', err);
+    res.status(500).json({ error: 'Server error.' });
+  }
+});
+
 // POST /api/bookings/:id/cancel — Cancel a booking
 router.post('/:id/cancel', async (req, res) => {
   try {
@@ -104,7 +126,7 @@ router.post('/:id/cancel', async (req, res) => {
     const user_id = req.user.id;
 
     const result = await pool.query(
-      "UPDATE bookings SET status = 'cancelled' WHERE id = $1 AND user_id = $2 AND status = 'confirmed' RETURNING *",
+      "UPDATE bookings SET status = 'cancelled' WHERE id = $1 AND user_id = $2 AND status IN ('confirmed', 'requested') RETURNING *",
       [id, user_id]
     );
 
