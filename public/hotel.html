@@ -57,6 +57,47 @@
     let loadedHotel = null;
     let loadedRooms = [];
 
+    // Check and display real-time availability for a room when dates are selected
+    async function checkRoomAvailability(roomId) {
+      const checkIn = document.getElementById(`checkin-${roomId}`).value;
+      const checkOut = document.getElementById(`checkout-${roomId}`).value;
+      const bookBtn = document.getElementById(`bookbtn-${roomId}`);
+      const availEl = document.getElementById(`avail-${roomId}`);
+      const statusEl = document.getElementById(`status-${roomId}`);
+
+      // Clear previous messages
+      if (statusEl) statusEl.textContent = '';
+
+      if (!checkIn || !checkOut || checkOut <= checkIn) {
+        if (availEl) { availEl.textContent = ''; availEl.className = ''; }
+        if (bookBtn) bookBtn.disabled = false;
+        return;
+      }
+
+      try {
+        const data = await hotelBooking.api.request(`/api/hotels/${hotelId}/availability?check_in=${checkIn}&check_out=${checkOut}`);
+        const rooms = data.rooms || [];
+        const room = rooms.find(r => String(r.id) === String(roomId));
+
+        if (room) {
+          const available = parseInt(room.available_rooms) || 0;
+          if (available > 0) {
+            availEl.textContent = `${available} room(s) available for selected dates`;
+            availEl.className = 'text-success small mt-1 mb-0';
+            bookBtn.disabled = false;
+          } else {
+            availEl.textContent = 'No rooms available for these dates. Please try different dates.';
+            availEl.className = 'text-danger small mt-1 mb-0';
+            bookBtn.disabled = true;
+          }
+        }
+      } catch (err) {
+        // Don't block booking on availability check failure
+        if (availEl) { availEl.textContent = ''; availEl.className = ''; }
+        if (bookBtn) bookBtn.disabled = false;
+      }
+    }
+
     async function bookRoom(roomId) {
       const checkInEl = document.getElementById(`checkin-${roomId}`);
       const checkOutEl = document.getElementById(`checkout-${roomId}`);
@@ -157,23 +198,24 @@
             <div class="card-body p-4">
               <h2 class="h5 mb-3">${room.room_type}</h2>
               <p class="mb-1">Price: INR ${price.toLocaleString()} / night</p>
-              <p class="text-secondary mb-3">Capacity: ${room.capacity} guest(s)</p>
+              <p class="text-secondary mb-2">Capacity: ${room.capacity} guest(s) &bull; Total: ${room.total_rooms} room(s)</p>
               <div class="row g-3">
                 <div class="col-12 col-md-4">
                   <label for="checkin-${room.id}" class="form-label">Check-in</label>
-                  <input id="checkin-${room.id}" type="date" class="form-control" min="${today}" required />
+                  <input id="checkin-${room.id}" type="date" class="form-control" min="${today}" onchange="checkRoomAvailability(${room.id})" required />
                 </div>
                 <div class="col-12 col-md-4">
                   <label for="checkout-${room.id}" class="form-label">Check-out</label>
-                  <input id="checkout-${room.id}" type="date" class="form-control" min="${today}" required />
+                  <input id="checkout-${room.id}" type="date" class="form-control" min="${today}" onchange="checkRoomAvailability(${room.id})" required />
                 </div>
                 <div class="col-12 col-md-4">
                   <label for="rooms-${room.id}" class="form-label">Rooms</label>
                   <input id="rooms-${room.id}" type="number" min="1" max="${room.total_rooms}" value="1" class="form-control" />
                 </div>
               </div>
-              <div class="d-grid d-md-inline-block mt-3">
-                <button class="btn btn-primary" onclick="bookRoom(${room.id})">Book Room</button>
+              <p id="avail-${room.id}" class="small mt-1 mb-0"></p>
+              <div class="d-grid d-md-inline-block mt-2">
+                <button id="bookbtn-${room.id}" class="btn btn-primary" onclick="bookRoom(${room.id})">Book Room</button>
               </div>
               <p id="status-${room.id}" class="text-danger small mt-2 mb-0"></p>
             </div>

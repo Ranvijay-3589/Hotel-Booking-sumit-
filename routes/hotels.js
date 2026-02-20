@@ -91,7 +91,7 @@ router.get('/:id/availability', async (req, res) => {
         SELECT room_id, COUNT(*) AS count
         FROM bookings
         WHERE hotel_id = $1
-          AND status = 'confirmed'
+          AND status IN ('confirmed', 'requested')
           AND check_in < $3
           AND check_out > $2
         GROUP BY room_id

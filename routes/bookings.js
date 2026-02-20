@@ -61,7 +61,7 @@ router.post('/', async (req, res) => {
 
     const bookedCount = parseInt(bookedResult.rows[0].count);
     if (bookedCount + rooms_booked > room.total_rooms) {
-      return res.status(409).json({ error: 'No rooms available for the selected dates.', message: 'No rooms available for the selected dates.' });
+      return res.status(409).json({ error: 'No rooms available for the selected dates. Please try different dates or another room type.', message: 'No rooms available for the selected dates. Please try different dates or another room type.' });
     }
 
     // Calculate total price
