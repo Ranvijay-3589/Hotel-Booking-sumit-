@@ -13,7 +13,8 @@ router.get('/', async (req, res) => {
       SELECT h.*,
         COALESCE(MIN(r.price), 0) AS min_room_price,
         COALESCE(MAX(r.price), 0) AS max_room_price,
-        COALESCE(SUM(r.available_rooms), 0) AS total_available
+        COALESCE(SUM(r.available_rooms), 0) AS total_available,
+        COUNT(r.id) AS room_count
       FROM hotels h
       LEFT JOIN rooms r ON r.hotel_id = h.id
     `;

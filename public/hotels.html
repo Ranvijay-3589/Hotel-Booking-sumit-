@@ -43,7 +43,7 @@
     <section class="card border-0 shadow-sm mb-4">
       <div class="card-body p-4">
         <div class="d-flex justify-content-between align-items-center mb-4">
-          <h1 class="h3 mb-0">Search Hotels</h1>
+          <h1 class="h3 mb-0">Search Hotels For Best Deals</h1>
           <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addHotelModal">
             + Add Hotel
           </button>
@@ -381,7 +381,7 @@
       div.id = `edit-room-${editRoomCount}`;
 
       const roomType = roomData ? roomData.room_type : 'Standard';
-      const price = roomData ? roomData.price_per_night : '';
+      const price = roomData ? (roomData.price_per_night || roomData.price) : '';
       const capacity = roomData ? roomData.capacity : 2;
 
       div.innerHTML = `
@@ -511,10 +511,10 @@
         editAmenities = Array.isArray(hotel.amenities) ? [...hotel.amenities] : [];
         renderEditAmenities();
 
-        // Load rooms
+        // Load rooms (rooms are returned as data.rooms, not hotel.rooms)
         document.getElementById('editRoomsContainer').innerHTML = '';
         editRoomCount = 0;
-        const rooms = hotel.rooms || [];
+        const rooms = data.rooms || [];
         if (rooms.length > 0) {
           rooms.forEach(room => addEditRoomEntry(room));
         } else {
@@ -676,10 +676,9 @@
         }
 
         results.innerHTML = hotels.map((hotel) => {
-          const rooms = hotel.rooms || [];
-          const prices = rooms.map(r => parseFloat(r.price_per_night)).filter(p => !isNaN(p));
-          const minP = prices.length > 0 ? Math.min(...prices) : 0;
-          const maxP = prices.length > 0 ? Math.max(...prices) : 0;
+          const roomCount = parseInt(hotel.room_count) || 0;
+          const minP = parseFloat(hotel.min_room_price) || 0;
+          const maxP = parseFloat(hotel.max_room_price) || 0;
           const amenitiesArr = Array.isArray(hotel.amenities) ? hotel.amenities : [];
 
           const imgHtml = hotel.image_url
@@ -699,9 +698,9 @@
                 ${amenitiesArr.length > 0 ? `<div class="mb-2">${amenitiesArr.slice(0, 4).map(a => `<span class="amenity-tag">${a}</span>`).join('')}${amenitiesArr.length > 4 ? `<span class="amenity-tag">+${amenitiesArr.length - 4} more</span>` : ''}</div>` : ''}
                 <div class="d-flex justify-content-between align-items-center mb-2">
                   <span class="badge bg-warning text-dark">Rating: ${hotel.rating || 'N/A'}</span>
-                  <span class="small text-secondary">${rooms.length} room(s)</span>
+                  <span class="small text-secondary">${roomCount} room(s)</span>
                 </div>
-                <p class="fw-semibold mb-3">${prices.length > 0 ? `INR ${minP.toLocaleString()}${minP !== maxP ? ` - ${maxP.toLocaleString()}` : ''} / night` : 'No rooms listed'}</p>
+                <p class="fw-semibold mb-3">${roomCount > 0 ? `INR ${minP.toLocaleString()}${minP !== maxP ? ` - ${maxP.toLocaleString()}` : ''} / night` : 'No rooms listed'}</p>
                 <div class="mt-auto">
                   <div class="d-grid mb-2">
                     <button class="btn btn-outline-primary" onclick="window.location.href='./hotel.html?id=${hotel.id}'">View Details & Book</button>
