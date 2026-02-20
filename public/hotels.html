@@ -676,7 +676,7 @@
         }
 
         results.innerHTML = hotels.map((hotel) => {
-          const roomCount = parseInt(hotel.room_count) || 0;
+          const roomCount = parseInt(hotel.total_rooms) || 0;
           const minP = parseFloat(hotel.min_room_price) || 0;
           const maxP = parseFloat(hotel.max_room_price) || 0;
           const amenitiesArr = Array.isArray(hotel.amenities) ? hotel.amenities : [];
