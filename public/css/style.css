@@ -661,6 +661,67 @@ a:hover {
 .mb-16 { margin-bottom: 16px; }
 .hidden { display: none !important; }
 
+/* Footer */
+.site-footer {
+  background: var(--secondary);
+  color: rgba(255, 255, 255, 0.6);
+  padding: 32px 0 24px;
+  margin-top: 48px;
+}
+
+.site-footer h5 {
+  color: var(--white);
+  font-size: 1.1rem;
+  margin-bottom: 8px;
+}
+
+.site-footer h6 {
+  color: var(--white);
+  font-size: 0.95rem;
+  margin-bottom: 8px;
+}
+
+.site-footer .footer-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 32px;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+.site-footer .footer-link {
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 0.875rem;
+  display: block;
+  padding: 2px 0;
+  text-decoration: none;
+}
+
+.site-footer .footer-link:hover {
+  color: var(--white);
+  text-decoration: none;
+}
+
+.site-footer .footer-bottom {
+  text-align: center;
+  font-size: 0.8rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  margin-top: 24px;
+  padding-top: 16px;
+  max-width: 1200px;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 24px;
+  padding-right: 24px;
+}
+
+.site-footer .footer-text {
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 0.8rem;
+  margin: 2px 0;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
   .hero h1 { font-size: 1.8rem; }
@@ -675,4 +736,5 @@ a:hover {
   .navbar { padding: 0 16px; }
   .container { padding: 16px; }
   .form-card { padding: 24px; }
+  .site-footer .footer-grid { grid-template-columns: 1fr; gap: 20px; }
 }

@@ -42,3 +42,28 @@ body {
 .card {
   border-radius: 1rem;
 }
+
+body {
+  display: flex;
+  flex-direction: column;
+}
+
+main {
+  flex: 1;
+}
+
+.footer-site {
+  background: var(--brand-bg);
+}
+
+.footer-link {
+  color: rgba(255, 255, 255, 0.6);
+  text-decoration: none;
+  font-size: 0.875rem;
+  display: block;
+  padding: 0.15rem 0;
+}
+
+.footer-link:hover {
+  color: #fff;
+}
