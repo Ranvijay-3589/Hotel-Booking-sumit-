@@ -13,6 +13,12 @@ body {
   font-family: "Segoe UI", Tahoma, sans-serif;
   background: linear-gradient(180deg, #f8fbff 0%, var(--page-bg) 100%);
   color: #1f2937;
+  display: flex;
+  flex-direction: column;
+}
+
+main {
+  flex: 1;
 }
 
 .topbar {
@@ -30,11 +36,6 @@ body {
   color: #fff;
 }
 
-.auth-page {
-  display: flex;
-  align-items: center;
-}
-
 .auth-card {
   border-radius: 1rem;
 }
@@ -43,17 +44,21 @@ body {
   border-radius: 1rem;
 }
 
-body {
-  display: flex;
-  flex-direction: column;
-}
-
-main {
-  flex: 1;
-}
-
+/* Footer */
 .footer-site {
   background: var(--brand-bg);
+  color: rgba(255, 255, 255, 0.7);
+  margin-top: auto;
+}
+
+.footer-site h5 {
+  font-size: 1.1rem;
+  margin-bottom: 0.5rem;
+}
+
+.footer-site h6 {
+  font-size: 0.95rem;
+  margin-bottom: 0.5rem;
 }
 
 .footer-link {
@@ -62,8 +67,22 @@ main {
   font-size: 0.875rem;
   display: block;
   padding: 0.15rem 0;
+  transition: color 0.2s;
 }
 
 .footer-link:hover {
   color: #fff;
+  text-decoration: none;
+}
+
+.footer-site .footer-bottom {
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  margin-top: 1.25rem;
+  padding-top: 1rem;
+}
+
+.footer-site .footer-contact {
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 0.85rem;
+  margin-bottom: 0.15rem;
 }
