@@ -53,15 +53,25 @@
             <label for="location" class="form-label">Search by Name or Location</label>
             <input id="location" class="form-control" placeholder="e.g. Goa, Taj, Mumbai" />
           </div>
-          <div class="col-6 col-md-3">
+          <div class="col-6 col-md-2">
             <label for="minPrice" class="form-label">Min Price (INR)</label>
             <input id="minPrice" type="number" min="0" class="form-control" placeholder="0" />
           </div>
-          <div class="col-6 col-md-3">
+          <div class="col-6 col-md-2">
             <label for="maxPrice" class="form-label">Max Price (INR)</label>
             <input id="maxPrice" type="number" min="0" class="form-control" placeholder="50000" />
           </div>
-          <div class="col-12 col-md-2 d-grid">
+          <div class="col-6 col-md-2">
+            <label for="minRating" class="form-label">Min Rating</label>
+            <select id="minRating" class="form-select">
+              <option value="">Any</option>
+              <option value="3">3+ Stars</option>
+              <option value="3.5">3.5+ Stars</option>
+              <option value="4">4+ Stars</option>
+              <option value="4.5">4.5+ Stars</option>
+            </select>
+          </div>
+          <div class="col-6 col-md-2 d-grid">
             <button id="searchBtn" class="btn btn-primary">Search</button>
           </div>
         </div>
@@ -635,10 +645,12 @@
       const location = document.getElementById('location').value.trim();
       const minPrice = document.getElementById('minPrice').value;
       const maxPrice = document.getElementById('maxPrice').value;
+      const minRating = document.getElementById('minRating').value;
 
       if (location) params.set('location', location);
       if (minPrice) params.set('min_price', minPrice);
       if (maxPrice) params.set('max_price', maxPrice);
+      if (minRating) params.set('rating', minRating);
 
       const results = document.getElementById('results');
       const info = document.getElementById('resultsInfo');
