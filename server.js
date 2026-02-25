@@ -36,6 +36,14 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
+// Hello check
+app.get(`${BASE}/api/hello`, (req, res) => {
+  res.json({ message: 'hello' });
+});
+app.get('/api/hello', (req, res) => {
+  res.json({ message: 'hello' });
+});
+
 // SPA fallback for non-API routes
 app.get('*', (req, res) => {
   if (!req.path.includes('/api/')) {
