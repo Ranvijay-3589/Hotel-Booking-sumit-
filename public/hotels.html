@@ -735,7 +735,7 @@
                 <p class="text-secondary small mb-2" style="display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">${hotel.description || ''}</p>
                 ${amenitiesArr.length > 0 ? `<div class="mb-2">${amenitiesArr.slice(0, 4).map(a => `<span class="amenity-tag">${a}</span>`).join('')}${amenitiesArr.length > 4 ? `<span class="amenity-tag">+${amenitiesArr.length - 4} more</span>` : ''}</div>` : ''}
                 <div class="d-flex justify-content-between align-items-center mb-2">
-                  <span class="badge bg-warning text-dark">Rating: ${hotel.rating || 'N/A'}</span>
+                  <span class="badge bg-warning text-dark">${hotel.rating || 'N/A'} <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></span>
                   <span class="small text-secondary">${roomCount} room(s)</span>
                 </div>
                 <p class="fw-semibold mb-3">${roomCount > 0 ? `INR ${minP.toLocaleString()}${minP !== maxP ? ` - ${maxP.toLocaleString()}` : ''} / night` : 'No rooms listed'}</p>
