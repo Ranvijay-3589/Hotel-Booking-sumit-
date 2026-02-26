@@ -1,0 +1,480 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard Stats - Hotel Booking</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous" />
+  <link rel="stylesheet" href="./css/styles.css" />
+  <style>
+    .stat-card {
+      border: none;
+      border-radius: 1rem;
+      transition: transform 0.2s;
+    }
+    .stat-card:hover {
+      transform: translateY(-2px);
+    }
+    .stat-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.25rem;
+    }
+    .stat-value {
+      font-size: 1.75rem;
+      font-weight: 700;
+      line-height: 1.2;
+    }
+    .stat-label {
+      font-size: 0.85rem;
+      color: #6b7280;
+      margin: 0;
+    }
+    .chart-card {
+      border: none;
+      border-radius: 1rem;
+    }
+    .chart-card .card-header {
+      background: transparent;
+      border-bottom: 1px solid #e5e7eb;
+      font-weight: 600;
+      font-size: 1rem;
+      padding: 1rem 1.25rem;
+    }
+    .chart-container {
+      position: relative;
+      padding: 1rem;
+    }
+  </style>
+</head>
+<body>
+  <nav class="navbar navbar-expand-lg navbar-dark topbar sticky-top">
+    <div class="container">
+      <a class="navbar-brand fw-bold" href="./hotels.html">Hotel Booking</a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav" aria-controls="mainNav" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="mainNav">
+        <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
+          <li class="nav-item"><a class="nav-link" href="./hotels.html">Hotels</a></li>
+          <li class="nav-item"><a class="nav-link" href="./my-bookings.html">My Bookings</a></li>
+          <li class="nav-item"><a class="nav-link active" aria-current="page" href="./stats.html">Stats</a></li>
+          <li class="nav-item"><a class="nav-link" href="#" onclick="hotelBooking.logout()">Logout</a></li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <main class="container py-4 py-md-5">
+    <section class="card border-0 shadow-sm mb-4">
+      <div class="card-body p-4">
+        <h1 class="h3 mb-2">Dashboard Stats</h1>
+        <p class="text-secondary mb-0">Visual overview of platform activity and performance</p>
+      </div>
+    </section>
+
+    <!-- Loading State -->
+    <div id="loadingState" class="text-center py-5">
+      <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Loading...</span>
+      </div>
+      <p class="mt-2 text-secondary">Loading stats...</p>
+    </div>
+
+    <!-- Error State -->
+    <div id="errorState" class="d-none">
+      <div class="card border-0 shadow-sm">
+        <div class="card-body text-center py-4">
+          <p class="text-danger mb-2" id="errorMessage">Failed to load stats.</p>
+          <button class="btn btn-primary btn-sm" onclick="loadStats()">Retry</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Stats Content (hidden until loaded) -->
+    <div id="statsContent" class="d-none">
+
+      <!-- Overview Cards -->
+      <div class="row g-3 mb-4" id="overviewCards"></div>
+
+      <!-- Charts Row 1: Bar + Pie -->
+      <div class="row g-4 mb-4">
+        <div class="col-12 col-lg-8">
+          <div class="card chart-card shadow-sm">
+            <div class="card-header">Top Hotels by Bookings</div>
+            <div class="chart-container" style="height: 350px;">
+              <canvas id="topHotelsChart"></canvas>
+            </div>
+          </div>
+        </div>
+        <div class="col-12 col-lg-4">
+          <div class="card chart-card shadow-sm">
+            <div class="card-header">Bookings by Status</div>
+            <div class="chart-container" style="height: 350px;">
+              <canvas id="statusPieChart"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Charts Row 2: Monthly Trend + Room Types -->
+      <div class="row g-4 mb-4">
+        <div class="col-12 col-lg-7">
+          <div class="card chart-card shadow-sm">
+            <div class="card-header">Monthly Bookings (Last 12 Months)</div>
+            <div class="chart-container" style="height: 350px;">
+              <canvas id="monthlyChart"></canvas>
+            </div>
+          </div>
+        </div>
+        <div class="col-12 col-lg-5">
+          <div class="card chart-card shadow-sm">
+            <div class="card-header">Room Type Distribution</div>
+            <div class="chart-container" style="height: 350px;">
+              <canvas id="roomTypePieChart"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Charts Row 3: Revenue by Hotel -->
+      <div class="row g-4 mb-4">
+        <div class="col-12">
+          <div class="card chart-card shadow-sm">
+            <div class="card-header">Revenue by Hotel (INR)</div>
+            <div class="chart-container" style="height: 350px;">
+              <canvas id="revenueBarChart"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <footer class="footer-site mt-auto py-4">
+    <div class="container">
+      <div class="row">
+        <div class="col-md-4 mb-3 mb-md-0">
+          <h5 class="fw-bold text-white mb-2">Hotel Booking</h5>
+          <p class="text-white-50 small mb-0">Find and book the best hotels for your next trip.</p>
+        </div>
+        <div class="col-md-4 mb-3 mb-md-0">
+          <h6 class="text-white mb-2">Quick Links</h6>
+          <ul class="list-unstyled mb-0">
+            <li><a href="./hotels.html" class="footer-link">Search Hotels</a></li>
+            <li><a href="./my-bookings.html" class="footer-link">My Bookings</a></li>
+            <li><a href="./stats.html" class="footer-link">Dashboard Stats</a></li>
+            <li><a href="./login.html" class="footer-link">Login</a></li>
+          </ul>
+        </div>
+        <div class="col-md-4">
+          <h6 class="text-white mb-2">Contact</h6>
+          <ul class="list-unstyled mb-0">
+            <li class="text-white-50 small">Email: support@hotelbooking.com</li>
+            <li class="text-white-50 small">Phone: +91 1234567890</li>
+          </ul>
+        </div>
+      </div>
+      <hr class="border-secondary my-3">
+      <p class="text-white-50 text-center small mb-0">&copy; 2026 Hotel Booking. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+  <script src="./js/common.js"></script>
+  <script>
+    hotelBooking.ensureAuth();
+
+    const API_BASE = (() => {
+      const origin = window.location.origin;
+      const pathMatch = window.location.pathname.match(/^\/([^/]+)\//);
+      return pathMatch ? origin + '/' + pathMatch[1] : origin;
+    })();
+
+    const COLORS = {
+      blue: '#3b82f6',
+      green: '#22c55e',
+      yellow: '#eab308',
+      red: '#ef4444',
+      purple: '#8b5cf6',
+      orange: '#f97316',
+      teal: '#14b8a6',
+      pink: '#ec4899',
+      indigo: '#6366f1',
+      cyan: '#06b6d4'
+    };
+    const COLOR_LIST = Object.values(COLORS);
+
+    function formatCurrency(val) {
+      return 'INR ' + Number(val).toLocaleString('en-IN', { maximumFractionDigits: 0 });
+    }
+
+    function formatMonth(ym) {
+      const [y, m] = ym.split('-');
+      const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+      return months[parseInt(m) - 1] + ' ' + y;
+    }
+
+    function renderOverviewCards(overview) {
+      const cards = [
+        { label: 'Total Hotels', value: overview.total_hotels, color: '#3b82f6', bg: '#eff6ff', icon: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 16 16"><path d="M1 2.828c.885-.37 2.154-.769 3.388-.893 1.33-.134 2.458.063 3.112.752v9.746c-.935-.53-2.12-.603-3.213-.493-1.18.12-2.37.461-3.287.811V2.828zm7.5-.141c.654-.689 1.782-.886 3.112-.752 1.234.124 2.503.523 3.388.893v9.923c-.918-.35-2.107-.692-3.287-.81-1.094-.111-2.278-.039-3.213.492V2.687zM8 1.783C7.015.936 5.587.81 4.287.94c-1.514.153-3.042.672-3.994 1.105A.5.5 0 0 0 0 2.5v11a.5.5 0 0 0 .707.455c.882-.4 2.303-.881 3.68-1.02 1.409-.142 2.59.087 3.223.877a.5.5 0 0 0 .78 0c.633-.79 1.814-1.019 3.222-.877 1.378.139 2.8.62 3.681 1.02A.5.5 0 0 0 16 13.5v-11a.5.5 0 0 0-.293-.455c-.952-.433-2.48-.952-3.994-1.105C10.413.809 8.985.936 8 1.783z"/></svg>' },
+        { label: 'Total Rooms', value: overview.total_rooms, color: '#8b5cf6', bg: '#f5f3ff', icon: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 16 16"><path d="M2 1a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v6.5a.5.5 0 0 1-1 0V1H3v14h3v-2.5a.5.5 0 0 1 .5-.5H8v4H3a1 1 0 0 1-1-1V1z"/><path d="M4.5 2a.5.5 0 0 0-.5.5v1a.5.5 0 0 0 .5.5h1a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5h-1zm3 0a.5.5 0 0 0-.5.5v1a.5.5 0 0 0 .5.5h1a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5h-1zm3 0a.5.5 0 0 0-.5.5v1a.5.5 0 0 0 .5.5h1a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5h-1zm-6 3a.5.5 0 0 0-.5.5v1a.5.5 0 0 0 .5.5h1a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5h-1zm3 0a.5.5 0 0 0-.5.5v1a.5.5 0 0 0 .5.5h1a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5h-1zm3 0a.5.5 0 0 0-.5.5v1a.5.5 0 0 0 .5.5h1a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5h-1zm-6 3a.5.5 0 0 0-.5.5v1a.5.5 0 0 0 .5.5h1a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5h-1zm3 0a.5.5 0 0 0-.5.5v1a.5.5 0 0 0 .5.5h1a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5h-1z"/></svg>' },
+        { label: 'Total Bookings', value: overview.total_bookings, color: '#22c55e', bg: '#f0fdf4', icon: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 16 16"><path d="M5.5 7a.5.5 0 0 0 0 1h5a.5.5 0 0 0 0-1h-5zM5 9.5a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 0 1h-5a.5.5 0 0 1-.5-.5zm0 2a.5.5 0 0 1 .5-.5h2a.5.5 0 0 1 0 1h-2a.5.5 0 0 1-.5-.5z"/><path d="M9.5 0H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V4.5L9.5 0zm0 1v2A1.5 1.5 0 0 0 11 4.5h2V14a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1h5.5z"/></svg>' },
+        { label: 'Registered Users', value: overview.total_users, color: '#f97316', bg: '#fff7ed', icon: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 16 16"><path d="M15 14s1 0 1-1-1-4-5-4-5 3-5 4 1 1 1 1h8zm-7.978-1A.261.261 0 0 1 7 12.996c.001-.264.167-1.03.76-1.72C8.312 10.629 9.282 10 11 10c1.717 0 2.687.63 3.24 1.276.593.69.758 1.457.76 1.72l-.008.002a.274.274 0 0 1-.014.002H7.022zM11 7a2 2 0 1 0 0-4 2 2 0 0 0 0 4zm3-2a3 3 0 1 1-6 0 3 3 0 0 1 6 0zM6.936 9.28a5.88 5.88 0 0 0-1.23-.247A7.35 7.35 0 0 0 5 9c-4 0-5 3-5 4 0 .667.333 1 1 1h4.216A2.238 2.238 0 0 1 5 13c0-.779.357-1.85 1.084-2.72.6-.718 1.5-1.347 2.852-1.6-.34.082-.663.19-.964.327-.032.018-.064.036-.036.073zM4.5 8a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5z"/></svg>' },
+        { label: 'Rooms Booked', value: overview.total_rooms_booked, color: '#14b8a6', bg: '#f0fdfa', icon: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 16 16"><path d="M10.854 7.146a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708 0l-1.5-1.5a.5.5 0 1 1 .708-.708L7.5 9.793l2.646-2.647a.5.5 0 0 1 .708 0z"/><path d="M3.5 0a.5.5 0 0 1 .5.5V1h8V.5a.5.5 0 0 1 1 0V1h1a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V3a2 2 0 0 1 2-2h1V.5a.5.5 0 0 1 .5-.5zM1 4v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V4H1z"/></svg>' },
+        { label: 'Total Revenue', value: formatCurrency(overview.total_revenue), color: '#eab308', bg: '#fefce8', icon: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 16 16"><path d="M4 10.781c.148 1.667 1.513 2.85 3.591 3.003V15h1.043v-1.216c2.27-.179 3.678-1.438 3.678-3.3 0-1.59-.947-2.51-2.956-3.028l-.722-.187V3.467c1.122.11 1.879.714 2.07 1.616h1.47c-.166-1.6-1.54-2.748-3.54-2.875V1H7.591v1.233c-1.939.23-3.27 1.472-3.27 3.156 0 1.454.966 2.483 2.661 2.917l.61.162v4.031c-1.149-.17-1.94-.8-2.131-1.718H4zm3.391-3.836c-1.043-.263-1.6-.825-1.6-1.616 0-.944.704-1.641 1.8-1.828v3.495l-.2-.05zm1.591 1.872c1.287.323 1.852.859 1.852 1.769 0 1.097-.826 1.828-2.2 1.939V8.73l.348.086z"/></svg>' },
+        { label: 'Avg Booking Value', value: formatCurrency(overview.avg_booking_value), color: '#ec4899', bg: '#fdf2f8', icon: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 16 16"><path d="M0 3a2 2 0 0 1 2-2h13.5a.5.5 0 0 1 0 1H15v2a1 1 0 0 1 1 1v8.5a1.5 1.5 0 0 1-1.5 1.5h-12A2.5 2.5 0 0 1 0 12.5V3zm1 1.732V12.5A1.5 1.5 0 0 0 2.5 14h12a.5.5 0 0 0 .5-.5V5H2a1.99 1.99 0 0 1-1-.268zM1 3a1 1 0 0 0 1 1h12V2H2a1 1 0 0 0-1 1z"/></svg>' },
+        { label: 'Confirmed Revenue', value: formatCurrency(overview.confirmed_revenue), color: '#6366f1', bg: '#eef2ff', icon: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M10.354 6.146a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708 0l-1.5-1.5a.5.5 0 1 1 .708-.708L7 8.793l2.646-2.647a.5.5 0 0 1 .708 0z"/><path d="M2 1a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V3a2 2 0 0 0-2-2H2zm12 1a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1h12z"/></svg>' }
+      ];
+
+      document.getElementById('overviewCards').innerHTML = cards.map(c => `
+        <div class="col-6 col-md-4 col-xl-3">
+          <div class="card stat-card shadow-sm h-100">
+            <div class="card-body d-flex align-items-center gap-3 p-3">
+              <div class="stat-icon" style="background:${c.bg}; color:${c.color};">${c.icon}</div>
+              <div>
+                <div class="stat-value" style="color:${c.color};">${c.value}</div>
+                <p class="stat-label">${c.label}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function renderTopHotelsChart(topHotels) {
+      const ctx = document.getElementById('topHotelsChart').getContext('2d');
+      new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: topHotels.map(h => h.name.length > 20 ? h.name.slice(0, 20) + '...' : h.name),
+          datasets: [{
+            label: 'Bookings',
+            data: topHotels.map(h => h.booking_count),
+            backgroundColor: COLOR_LIST.slice(0, topHotels.length),
+            borderRadius: 6,
+            borderSkipped: false,
+            barPercentage: 0.6
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              callbacks: {
+                afterLabel: function(ctx) {
+                  return 'Revenue: ' + formatCurrency(topHotels[ctx.dataIndex].total_revenue);
+                }
+              }
+            }
+          },
+          scales: {
+            y: { beginAtZero: true, ticks: { stepSize: 1 }, grid: { color: '#f3f4f6' } },
+            x: { grid: { display: false } }
+          }
+        }
+      });
+    }
+
+    function renderStatusPieChart(bookingsByStatus) {
+      const statusColors = {
+        confirmed: '#22c55e',
+        requested: '#eab308',
+        cancelled: '#ef4444'
+      };
+      const ctx = document.getElementById('statusPieChart').getContext('2d');
+      new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels: bookingsByStatus.map(s => s.status.charAt(0).toUpperCase() + s.status.slice(1)),
+          datasets: [{
+            data: bookingsByStatus.map(s => s.count),
+            backgroundColor: bookingsByStatus.map(s => statusColors[s.status] || '#9ca3af'),
+            borderWidth: 2,
+            borderColor: '#fff',
+            hoverOffset: 6
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { position: 'bottom', labels: { padding: 16, usePointStyle: true, pointStyle: 'circle' } }
+          },
+          cutout: '55%'
+        }
+      });
+    }
+
+    function renderMonthlyChart(monthlyBookings) {
+      const ctx = document.getElementById('monthlyChart').getContext('2d');
+      new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: monthlyBookings.map(m => formatMonth(m.month)),
+          datasets: [
+            {
+              label: 'Bookings',
+              data: monthlyBookings.map(m => m.count),
+              backgroundColor: 'rgba(59, 130, 246, 0.7)',
+              borderRadius: 6,
+              borderSkipped: false,
+              barPercentage: 0.5,
+              yAxisID: 'y'
+            },
+            {
+              label: 'Revenue (INR)',
+              data: monthlyBookings.map(m => m.revenue),
+              type: 'line',
+              borderColor: '#f97316',
+              backgroundColor: 'rgba(249, 115, 22, 0.1)',
+              tension: 0.3,
+              pointRadius: 4,
+              pointBackgroundColor: '#f97316',
+              fill: true,
+              yAxisID: 'y1'
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          interaction: { mode: 'index', intersect: false },
+          plugins: {
+            legend: { position: 'top', labels: { usePointStyle: true, pointStyle: 'circle', padding: 16 } },
+            tooltip: {
+              callbacks: {
+                label: function(ctx) {
+                  if (ctx.dataset.label === 'Revenue (INR)') {
+                    return 'Revenue: ' + formatCurrency(ctx.raw);
+                  }
+                  return 'Bookings: ' + ctx.raw;
+                }
+              }
+            }
+          },
+          scales: {
+            y: { beginAtZero: true, position: 'left', ticks: { stepSize: 1 }, title: { display: true, text: 'Bookings' }, grid: { color: '#f3f4f6' } },
+            y1: { beginAtZero: true, position: 'right', grid: { drawOnChartArea: false }, title: { display: true, text: 'Revenue (INR)' }, ticks: { callback: v => (v >= 1000 ? (v / 1000).toFixed(0) + 'k' : v) } },
+            x: { grid: { display: false } }
+          }
+        }
+      });
+    }
+
+    function renderRoomTypePieChart(roomTypeDistribution) {
+      const ctx = document.getElementById('roomTypePieChart').getContext('2d');
+      new Chart(ctx, {
+        type: 'pie',
+        data: {
+          labels: roomTypeDistribution.map(r => r.room_type),
+          datasets: [{
+            data: roomTypeDistribution.map(r => r.booking_count),
+            backgroundColor: COLOR_LIST.slice(0, roomTypeDistribution.length),
+            borderWidth: 2,
+            borderColor: '#fff',
+            hoverOffset: 6
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { position: 'bottom', labels: { padding: 12, usePointStyle: true, pointStyle: 'circle', font: { size: 11 } } }
+          }
+        }
+      });
+    }
+
+    function renderRevenueBarChart(topHotels) {
+      const ctx = document.getElementById('revenueBarChart').getContext('2d');
+      new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: topHotels.map(h => h.name.length > 25 ? h.name.slice(0, 25) + '...' : h.name),
+          datasets: [{
+            label: 'Revenue (INR)',
+            data: topHotels.map(h => h.total_revenue),
+            backgroundColor: topHotels.map((_, i) => COLOR_LIST[i % COLOR_LIST.length] + 'CC'),
+            borderColor: topHotels.map((_, i) => COLOR_LIST[i % COLOR_LIST.length]),
+            borderWidth: 1,
+            borderRadius: 6,
+            borderSkipped: false,
+            barPercentage: 0.5
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          indexAxis: 'y',
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              callbacks: {
+                label: function(ctx) { return formatCurrency(ctx.raw); }
+              }
+            }
+          },
+          scales: {
+            x: { beginAtZero: true, ticks: { callback: v => (v >= 1000 ? (v / 1000).toFixed(0) + 'k' : v) }, grid: { color: '#f3f4f6' } },
+            y: { grid: { display: false } }
+          }
+        }
+      });
+    }
+
+    async function loadStats() {
+      const loadingEl = document.getElementById('loadingState');
+      const errorEl = document.getElementById('errorState');
+      const contentEl = document.getElementById('statsContent');
+
+      loadingEl.classList.remove('d-none');
+      errorEl.classList.add('d-none');
+      contentEl.classList.add('d-none');
+
+      try {
+        const token = localStorage.getItem('token');
+        const response = await fetch(API_BASE + '/api/stats', {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': token ? 'Bearer ' + token : ''
+          }
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch stats (HTTP ' + response.status + ')');
+        }
+
+        const data = await response.json();
+
+        loadingEl.classList.add('d-none');
+        contentEl.classList.remove('d-none');
+
+        renderOverviewCards(data.overview);
+        renderTopHotelsChart(data.top_hotels);
+        renderStatusPieChart(data.bookings_by_status);
+        renderMonthlyChart(data.monthly_bookings);
+        renderRoomTypePieChart(data.room_type_distribution);
+        renderRevenueBarChart(data.top_hotels);
+
+      } catch (err) {
+        loadingEl.classList.add('d-none');
+        errorEl.classList.remove('d-none');
+        document.getElementById('errorMessage').textContent = err.message;
+      }
+    }
+
+    loadStats();
+  </script>
+  <script src="https://widget.vibeback.io/v1/loader.js" data-widget-id="wgt_9wIDaxoB5VcXCstp" data-domain="ranvijay.capricorn.online/sumit"></script>
+</body>
+</html>

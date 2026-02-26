@@ -6,6 +6,7 @@ require('dotenv').config();
 const authRoutes = require('./routes/auth');
 const hotelRoutes = require('./routes/hotels');
 const bookingRoutes = require('./routes/bookings');
+const statsRoutes = require('./routes/stats');
 
 const app = express();
 const PORT = process.env.PORT || 5003;
@@ -27,6 +28,8 @@ app.use(`${BASE}/api/bookings`, bookingRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/hotels', hotelRoutes);
 app.use('/api/bookings', bookingRoutes);
+app.use(`${BASE}/api/stats`, statsRoutes);
+app.use('/api/stats', statsRoutes);
 
 // Health check
 app.get(`${BASE}/api/health`, (req, res) => {
