@@ -191,12 +191,6 @@
   <script>
     hotelBooking.ensureAuth();
 
-    const API_BASE = (() => {
-      const origin = window.location.origin;
-      const pathMatch = window.location.pathname.match(/^\/([^/]+)\//);
-      return pathMatch ? origin + '/' + pathMatch[1] : origin;
-    })();
-
     const COLORS = {
       blue: '#3b82f6',
       green: '#22c55e',
@@ -441,20 +435,7 @@
       contentEl.classList.add('d-none');
 
       try {
-        const token = localStorage.getItem('token');
-        const response = await fetch(API_BASE + '/api/stats', {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': token ? 'Bearer ' + token : ''
-          }
-        });
-
-        if (!response.ok) {
-          throw new Error('Failed to fetch stats (HTTP ' + response.status + ')');
-        }
-
-        const data = await response.json();
+        const data = await hotelBooking.api.request('/api/stats');
 
         loadingEl.classList.add('d-none');
         contentEl.classList.remove('d-none');
