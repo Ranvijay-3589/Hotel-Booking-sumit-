@@ -402,13 +402,12 @@
             borderWidth: 1,
             borderRadius: 6,
             borderSkipped: false,
-            barPercentage: 0.5
+            barPercentage: 0.6
           }]
         },
         options: {
           responsive: true,
           maintainAspectRatio: false,
-          indexAxis: 'y',
           plugins: {
             legend: { display: false },
             tooltip: {
@@ -418,8 +417,8 @@
             }
           },
           scales: {
-            x: { beginAtZero: true, ticks: { callback: v => (v >= 1000 ? (v / 1000).toFixed(0) + 'k' : v) }, grid: { color: '#f3f4f6' } },
-            y: { grid: { display: false } }
+            y: { beginAtZero: true, ticks: { callback: v => (v >= 1000 ? (v / 1000).toFixed(0) + 'k' : v) }, grid: { color: '#f3f4f6' } },
+            x: { grid: { display: false } }
           }
         }
       });
