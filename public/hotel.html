@@ -209,10 +209,22 @@
       const hotel = data.hotel;
       loadedHotel = hotel;
 
+      const rating = parseFloat(hotel.rating) || 0;
+      const fullStars = Math.floor(rating);
+      const halfStar = (rating - fullStars) >= 0.5 ? 1 : 0;
+      const emptyStars = 5 - fullStars - halfStar;
+      const starsHtml = '<span style="color:#f5a623;font-size:1.1rem;">'
+        + '&#9733;'.repeat(fullStars)
+        + (halfStar ? '&#9734;' : '')
+        + '&#9734;'.repeat(emptyStars)
+        + '</span>'
+        + ` <span class="text-secondary small">${rating.toFixed(1)} / 5</span>`;
+
       document.getElementById('hotelDetail').innerHTML = `
         <div class="card-body p-4">
           <h1 class="h3 mb-2">${hotel.name}</h1>
           <p class="text-secondary mb-1">${hotel.location}</p>
+          <p class="mb-1">${starsHtml}</p>
           <p class="text-secondary mb-0">${hotel.description || ''}</p>
         </div>
       `;
