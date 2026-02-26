@@ -15,6 +15,7 @@ router.post('/', async (req, res) => {
     const check_in = req.body.check_in || req.body.checkIn || req.query.check_in;
     const check_out = req.body.check_out || req.body.checkOut || req.query.check_out;
     const guests = req.body.guests || req.body.rooms_booked || req.query.rooms_booked || 1;
+    const custom_message = (req.body.custom_message || '').trim() || null;
     const user_id = req.user.id;
 
     if (!room_id || !check_in || !check_out) {
@@ -70,10 +71,10 @@ router.post('/', async (req, res) => {
     const total_price = (nights * price * rooms_booked).toFixed(2);
 
     const result = await pool.query(`
-      INSERT INTO bookings (user_id, room_id, hotel_id, check_in, check_out, guests, rooms_booked, total_price, status)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'requested')
+      INSERT INTO bookings (user_id, room_id, hotel_id, check_in, check_out, guests, rooms_booked, total_price, status, custom_message)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'requested', $9)
       RETURNING *
-    `, [user_id, room_id, hotel_id, check_in, check_out, rooms_booked, rooms_booked, total_price]);
+    `, [user_id, room_id, hotel_id, check_in, check_out, rooms_booked, rooms_booked, total_price, custom_message]);
 
     // Fetch hotel and room details for response
     const booking = result.rows[0];
@@ -98,6 +99,7 @@ router.post('/', async (req, res) => {
       price_per_night: roomPrice,
       total_price: booking.total_price,
       status: 'requested',
+      custom_message: booking.custom_message || '',
       nights,
       booking: {
         ...booking,
