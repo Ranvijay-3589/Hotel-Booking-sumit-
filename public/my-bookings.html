@@ -498,6 +498,7 @@
                 <p class="mb-1"><strong>Check-out:</strong> ${checkOut}</p>
                 <p class="mb-1"><strong>Nights:</strong> ${nights}</p>
                 <p class="mb-1"><strong>Rooms booked:</strong> ${roomsBooked}</p>
+                ${booking.custom_message ? '<p class="mb-1"><strong>Special Request:</strong> ' + booking.custom_message + '</p>' : ''}
                 ${totalPrice ? '<p class="mb-0"><strong>Total:</strong> INR ' + Number(totalPrice).toLocaleString() + '</p>' : ''}
               </div>
             </article>
