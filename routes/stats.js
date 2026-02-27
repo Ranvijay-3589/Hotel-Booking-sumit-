@@ -39,8 +39,9 @@ router.get('/', async (req, res) => {
         SELECT h.name, COUNT(b.id) AS booking_count,
                COALESCE(SUM(b.total_price), 0) AS total_revenue
         FROM hotels h
-        LEFT JOIN bookings b ON b.hotel_id = h.id AND b.status IN ('confirmed', 'requested')
+        INNER JOIN bookings b ON b.hotel_id = h.id AND b.status IN ('confirmed', 'requested')
         GROUP BY h.id, h.name
+        HAVING COUNT(b.id) > 0
         ORDER BY booking_count DESC
         LIMIT 10
       `),

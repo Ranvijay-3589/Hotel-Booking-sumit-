@@ -440,11 +440,12 @@
         contentEl.classList.remove('d-none');
 
         renderOverviewCards(data.overview);
-        renderTopHotelsChart(data.top_hotels);
+        const hotelsWithBookings = data.top_hotels.filter(h => h.booking_count > 0);
+        renderTopHotelsChart(hotelsWithBookings);
         renderStatusPieChart(data.bookings_by_status);
         renderMonthlyChart(data.monthly_bookings);
         renderRoomTypePieChart(data.room_type_distribution);
-        renderRevenueBarChart(data.top_hotels);
+        renderRevenueBarChart(hotelsWithBookings);
 
       } catch (err) {
         loadingEl.classList.add('d-none');
