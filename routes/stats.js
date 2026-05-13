@@ -36,11 +36,11 @@ router.get('/', async (req, res) => {
         FROM bookings
       `),
       pool.query(`
-        SELECT h.name, COUNT(b.id) AS booking_count,
+        SELECT h.name, h.location, COUNT(b.id) AS booking_count,
                COALESCE(SUM(b.total_price), 0) AS total_revenue
         FROM hotels h
         INNER JOIN bookings b ON b.hotel_id = h.id AND b.status IN ('confirmed', 'requested')
-        GROUP BY h.id, h.name
+        GROUP BY h.id, h.name, h.location
         HAVING COUNT(b.id) > 0
         ORDER BY booking_count DESC
         LIMIT 10
@@ -81,6 +81,7 @@ router.get('/', async (req, res) => {
       })),
       top_hotels: topHotels.rows.map(r => ({
         name: r.name,
+        location: r.location,
         booking_count: parseInt(r.booking_count),
         total_revenue: parseFloat(r.total_revenue)
       })),

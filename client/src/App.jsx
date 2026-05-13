@@ -7,6 +7,7 @@ import HotelSearch from './pages/HotelSearch';
 import HotelDetail from './pages/HotelDetail';
 import BookingConfirmation from './pages/BookingConfirmation';
 import MyBookings from './pages/MyBookings';
+import AdminDashboard from './pages/AdminDashboard';
 
 function ProtectedRoute({ children }) {
   const { user, loading } = useAuth();
@@ -41,6 +42,7 @@ export default function App() {
               </ProtectedRoute>
             }
           />
+          <Route path="/admin" element={<AdminDashboard />} />
         </Routes>
       </main>
     </div>

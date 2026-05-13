@@ -11,6 +11,7 @@ export default function Navbar() {
       </Link>
       <div className="navbar-links">
         <Link to="/">Hotels</Link>
+        <Link to="/admin">Dashboard</Link>
         {user ? (
           <>
             <Link to="/my-bookings">My Bookings</Link>

@@ -35,4 +35,7 @@ export const api = {
   // Bookings
   createBooking: (body) => request('/bookings', { method: 'POST', body: JSON.stringify(body) }),
   getMyBookings: () => request('/bookings/my'),
+
+  // Stats
+  getStats: () => request('/stats'),
 };
